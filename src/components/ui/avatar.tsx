@@ -34,7 +34,8 @@ export function Avatar({
   className,
   ...props
 }: AvatarProps) {
-  const [imageError, setImageError] = React.useState(false);
+  const [erroredSrc, setErroredSrc] = React.useState<string | null>(null);
+  const showImage = Boolean(src) && erroredSrc !== src;
 
   return (
     <div
@@ -45,12 +46,12 @@ export function Avatar({
       )}
       {...props}
     >
-      {src && !imageError ? (
+      {showImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt={alt}
-          onError={() => setImageError(true)}
+          onError={() => setErroredSrc(src || null)}
           className="h-full w-full object-cover"
         />
       ) : (

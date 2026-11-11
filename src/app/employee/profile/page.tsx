@@ -15,6 +15,7 @@ import {
   Edit3,
   Heart,
   Download,
+  Camera,
 } from "lucide-react";
 import { useEmployee } from "@/context/employee-context";
 import { Avatar } from "@/components/ui/avatar";
@@ -34,7 +35,7 @@ export default function EmployeeProfilePage() {
 
         <div className="relative pt-6 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-            <div className="ring-4 ring-white rounded-2xl shadow-md bg-white">
+            <div className="relative ring-4 ring-white rounded-2xl shadow-md bg-white">
               <Avatar
                 src={profile.avatar}
                 alt={profile.name}
@@ -43,6 +44,15 @@ export default function EmployeeProfilePage() {
                 status="online"
                 className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl"
               />
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(true)}
+                title="Change profile photo"
+                aria-label="Change profile photo"
+                className="absolute -top-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-orange-600 text-white shadow-sm ring-2 ring-white hover:bg-orange-700 transition-colors cursor-pointer"
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </button>
             </div>
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">

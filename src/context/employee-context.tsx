@@ -158,11 +158,9 @@ function computeSalaryBreakdown(grossSalary: number): EmployeeSalaryBreakdown {
   const medicalAllowance = Math.round(safeGross * 0.1);
   const conveyanceAllowance =
     safeGross - basicSalary - houseRentAllowance - medicalAllowance;
-  const providentFundDeduction = Math.round(basicSalary * 0.08);
-  const incomeTaxDeduction =
-    safeGross > 40000 ? Math.round((safeGross - 40000) * 0.05) : 0;
-  const netPayable =
-    safeGross - providentFundDeduction - incomeTaxDeduction;
+  const providentFundDeduction = 0;
+  const incomeTaxDeduction = 0;
+  const netPayable = safeGross;
 
   return {
     currency: "BDT (৳)",
@@ -233,6 +231,7 @@ interface EmployeeContextType {
     reason: string;
   }) => { success: boolean; message: string };
   updateProfile: (data: {
+    avatar?: string;
     phone: string;
     location: string;
     bloodGroup: string;
@@ -241,7 +240,7 @@ interface EmployeeContextType {
       relationship: string;
       phone: string;
     };
-  }) => Promise<void>;
+  }) => Promise<boolean>;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
   updateGoalSelfAssessment: (goalId: string, notes: string) => void;
@@ -253,7 +252,7 @@ const EmployeeContext = React.createContext<EmployeeContextType | undefined>(
 
 export function EmployeeProvider({ children }: { children: React.ReactNode }) {
   const { showToast } = useToast();
-  const { isHydrated, isAuthenticated, currentUser } = useAuth();
+  const { isHydrated, isAuthenticated, currentUser, refreshSession } = useAuth();
   const {
     leaveRequests: hrmsLeaves,
     officeHolidays,
@@ -747,6 +746,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProfile = async (data: {
+    avatar?: string;
     phone: string;
     location: string;
     bloodGroup: string;
@@ -755,24 +755,35 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
       relationship: string;
       phone: string;
     };
-  }) => {
+  }): Promise<boolean> => {
     try {
       const res = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) return;
+      const json = (await res.json().catch(() => ({}))) as {
+        avatar?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        showToast("Update Failed", json.error || "Failed to save profile.", "error");
+        return false;
+      }
       setProfile((prev) => ({
         ...prev,
+        avatar: json.avatar ?? data.avatar ?? prev.avatar,
         phone: data.phone,
         location: data.location,
         bloodGroup: data.bloodGroup,
         emergencyContact: data.emergencyContact,
       }));
+      await Promise.all([refreshSession(), refreshHRMSData()]);
       showToast("Profile Updated", "Personal details saved to MongoDB.", "success");
+      return true;
     } catch {
       showToast("Error", "Failed to save profile.", "error");
+      return false;
     }
   };
 

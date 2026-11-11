@@ -233,8 +233,8 @@ export default function EmployeeDashboardPage() {
                   <span className="font-medium text-slate-700">{formatBDT(latestPayslip.grossSalary)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Total Deductions (PF+Tax):</span>
-                  <span className="font-medium text-red-600">-{formatBDT(latestPayslip.totalDeductions)}</span>
+                  <span>Payment Method:</span>
+                  <span className="font-medium text-emerald-700">Direct Bank Transfer</span>
                 </div>
               </div>
             </div>

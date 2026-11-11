@@ -22,9 +22,6 @@ export default function EmployeeSalaryPage() {
     salaryDetails.medicalAllowance +
     salaryDetails.conveyanceAllowance;
 
-  const totalDeductions =
-    salaryDetails.providentFundDeduction + salaryDetails.incomeTaxDeduction;
-
   return (
     <div className="space-y-6">
       {/* Header with Confidentiality Notice */}
@@ -53,7 +50,7 @@ export default function EmployeeSalaryPage() {
       </div>
 
       {/* Salary Overview Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <span className="text-xs text-slate-500 block font-medium">Total Gross Compensation</span>
           <div className="text-2xl font-bold text-slate-900 mt-2">
@@ -69,14 +66,6 @@ export default function EmployeeSalaryPage() {
           </div>
           <span className="text-[11px] text-emerald-600 mt-1 block">HRA, Medical, Conveyance</span>
         </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <span className="text-xs text-red-600 block font-medium">Monthly Deductions</span>
-          <div className="text-2xl font-bold text-red-600 mt-2">
-            -{formatBDT(totalDeductions)}
-          </div>
-          <span className="text-[11px] text-slate-400 mt-1 block">Provident Fund & TDS Tax</span>
-        </div>
       </div>
 
       {/* Detailed Breakdown Grids */}
@@ -90,7 +79,7 @@ export default function EmployeeSalaryPage() {
 
           <div className="divide-y divide-slate-100 text-xs">
             <div className="py-2.5 flex justify-between">
-              <span className="text-slate-600">Basic Salary (63.6%)</span>
+              <span className="text-slate-600">Basic Salary (60.0%)</span>
               <span className="font-bold text-slate-900">{formatBDT(salaryDetails.basicSalary)}</span>
             </div>
             <div className="py-2.5 flex justify-between">
@@ -116,36 +105,8 @@ export default function EmployeeSalaryPage() {
           </div>
         </div>
 
-        {/* Deductions & Bank Routing */}
+        {/* Bank Routing */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900">Statutory Deductions</h3>
-              <span className="text-xs text-slate-400">Monthly</span>
-            </div>
-
-            <div className="divide-y divide-slate-100 text-xs">
-              <div className="py-2.5 flex justify-between">
-                <div>
-                  <span className="text-slate-700 font-medium block">Employee Provident Fund (EPF)</span>
-                  <span className="text-[11px] text-slate-400">Matched 100% by Bayshore Communication</span>
-                </div>
-                <span className="font-bold text-red-600">-{formatBDT(salaryDetails.providentFundDeduction)}</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <div>
-                  <span className="text-slate-700 font-medium block">Tax Deducted at Source (TDS)</span>
-                  <span className="text-[11px] text-slate-400">NBR Assessment Year 2025-2026</span>
-                </div>
-                <span className="font-bold text-red-600">-{formatBDT(salaryDetails.incomeTaxDeduction)}</span>
-              </div>
-              <div className="py-3 flex justify-between text-sm font-bold bg-slate-50/70 px-3 rounded-xl border border-slate-200">
-                <span className="text-slate-900">Total Deductions</span>
-                <span className="text-red-600">-{formatBDT(totalDeductions)}</span>
-              </div>
-            </div>
-          </div>
-
           {/* Bank Disbursement Details */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-2 text-xs">
             <h4 className="font-bold text-slate-900 flex items-center gap-2">
@@ -189,7 +150,6 @@ export default function EmployeeSalaryPage() {
                 <th className="px-6 py-3">Salary Month</th>
                 <th className="px-6 py-3">Disbursed Date</th>
                 <th className="px-6 py-3">Gross Earnings</th>
-                <th className="px-6 py-3">Total Deductions</th>
                 <th className="px-6 py-3">Net Take Home</th>
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3 text-right">Action</th>
@@ -202,7 +162,6 @@ export default function EmployeeSalaryPage() {
                   <td className="px-6 py-3.5 font-semibold text-slate-800">{slip.monthYear}</td>
                   <td className="px-6 py-3.5 text-slate-500">{slip.issueDate}</td>
                   <td className="px-6 py-3.5 font-semibold text-slate-900">{formatBDT(slip.grossSalary)}</td>
-                  <td className="px-6 py-3.5 text-red-600 font-medium">-{formatBDT(slip.totalDeductions)}</td>
                   <td className="px-6 py-3.5 font-bold text-slate-900 text-sm">
                     {formatBDT(slip.netPayable)}
                   </td>

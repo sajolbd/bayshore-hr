@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useEmployee } from "@/context/employee-context";
 import { EmployeePayslip } from "@/types/employee-portal";
 import { formatBDT } from "@/lib/utils";
-import { Download, Printer, Sparkles, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Download, Printer, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { BayshoreLogo } from "@/components/common/bayshore-logo";
 
 interface PayslipModalProps {
   payslip: EmployeePayslip | null;
@@ -17,6 +18,15 @@ interface PayslipModalProps {
 export function PayslipModal({ payslip, open, onClose }: PayslipModalProps) {
   const { profile, salaryDetails } = useEmployee();
   const [downloading, setDownloading] = React.useState(false);
+  const downloadTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    return () => {
+      if (downloadTimerRef.current) clearTimeout(downloadTimerRef.current);
+    };
+  }, []);
 
   if (!payslip) return null;
 
@@ -25,8 +35,9 @@ export function PayslipModal({ payslip, open, onClose }: PayslipModalProps) {
   };
 
   const handleDownload = () => {
+    if (downloadTimerRef.current) clearTimeout(downloadTimerRef.current);
     setDownloading(true);
-    setTimeout(() => {
+    downloadTimerRef.current = setTimeout(() => {
       setDownloading(false);
       // Simulate download trigger
       const element = document.createElement("a");
@@ -37,7 +48,6 @@ export function PayslipModal({ payslip, open, onClose }: PayslipModalProps) {
             `Employee: ${profile.name} (${profile.id})\n` +
             `Department: ${profile.department} | Role: ${profile.role}\n` +
             `Gross Salary: ৳${payslip.grossSalary.toLocaleString("en-IN")}\n` +
-            `Total Deductions: ৳${payslip.totalDeductions.toLocaleString("en-IN")}\n` +
             `Net Payable: ৳${payslip.netPayable.toLocaleString("en-IN")}\n` +
             `Bank: ${salaryDetails.bankAccount} (${salaryDetails.bankName})\n` +
             `Status: ${payslip.status}\n` +
@@ -45,11 +55,13 @@ export function PayslipModal({ payslip, open, onClose }: PayslipModalProps) {
         ],
         { type: "text/plain" }
       );
-      element.href = URL.createObjectURL(file);
+      const url = URL.createObjectURL(file);
+      element.href = url;
       element.download = `Payslip_${profile.id}_${payslip.monthYear.replace(" ", "_")}.txt`;
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
+      URL.revokeObjectURL(url);
     }, 600);
   };
 
@@ -67,9 +79,7 @@ export function PayslipModal({ payslip, open, onClose }: PayslipModalProps) {
           {/* Header & Logo */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-600 text-white shadow-md shadow-orange-500/20">
-                <Sparkles className="h-6 w-6" />
-              </div>
+              <BayshoreLogo size={44} />
               <div>
                 <h3 className="text-lg font-bold text-slate-900 leading-tight">
                   Bayshore Communication Ltd.
@@ -121,59 +131,31 @@ export function PayslipModal({ payslip, open, onClose }: PayslipModalProps) {
             </div>
           </div>
 
-          {/* Earnings vs Deductions Table */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Earnings */}
-            <div className="rounded-xl border border-slate-200 overflow-hidden">
-              <div className="bg-slate-100/70 px-3.5 py-2 text-xs font-bold text-slate-800 border-b border-slate-200">
-                Earnings Breakdown
-              </div>
-              <div className="divide-y divide-slate-100 p-2 text-xs">
-                <div className="flex justify-between py-1.5 px-2">
-                  <span className="text-slate-600">Basic Salary</span>
-                  <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.basicSalary)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 px-2">
-                  <span className="text-slate-600">House Rent Allowance (HRA)</span>
-                  <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.houseRentAllowance)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 px-2">
-                  <span className="text-slate-600">Medical Allowance</span>
-                  <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.medicalAllowance)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 px-2">
-                  <span className="text-slate-600">Conveyance Allowance</span>
-                  <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.conveyanceAllowance)}</span>
-                </div>
-                <div className="flex justify-between py-2 px-2 bg-slate-50 font-bold border-t border-slate-200">
-                  <span className="text-slate-900">Total Gross Earnings</span>
-                  <span className="text-orange-600">{formatBDT(payslip.grossSalary)}</span>
-                </div>
-              </div>
+          {/* Earnings Breakdown Table */}
+          <div className="rounded-xl border border-slate-200 overflow-hidden">
+            <div className="bg-slate-100/70 px-3.5 py-2 text-xs font-bold text-slate-800 border-b border-slate-200">
+              Earnings Breakdown
             </div>
-
-            {/* Deductions */}
-            <div className="rounded-xl border border-slate-200 overflow-hidden">
-              <div className="bg-slate-100/70 px-3.5 py-2 text-xs font-bold text-slate-800 border-b border-slate-200">
-                Statutory & Company Deductions
+            <div className="divide-y divide-slate-100 p-2 text-xs">
+              <div className="flex justify-between py-1.5 px-2">
+                <span className="text-slate-600">Basic Salary</span>
+                <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.basicSalary)}</span>
               </div>
-              <div className="divide-y divide-slate-100 p-2 text-xs">
-                <div className="flex justify-between py-1.5 px-2">
-                  <span className="text-slate-600">Provident Fund (Employee 10%)</span>
-                  <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.providentFundDeduction)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 px-2">
-                  <span className="text-slate-600">Tax Deducted at Source (TDS)</span>
-                  <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.incomeTaxDeduction)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 px-2 text-slate-400">
-                  <span>Other Adjustments / Loans</span>
-                  <span>{formatBDT(0)}</span>
-                </div>
-                <div className="flex justify-between py-2 px-2 bg-slate-50 font-bold border-t border-slate-200">
-                  <span className="text-slate-900">Total Deductions</span>
-                  <span className="text-red-600">{formatBDT(payslip.totalDeductions)}</span>
-                </div>
+              <div className="flex justify-between py-1.5 px-2">
+                <span className="text-slate-600">House Rent Allowance (HRA)</span>
+                <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.houseRentAllowance)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 px-2">
+                <span className="text-slate-600">Medical Allowance</span>
+                <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.medicalAllowance)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 px-2">
+                <span className="text-slate-600">Conveyance Allowance</span>
+                <span className="font-semibold text-slate-900">{formatBDT(salaryDetails.conveyanceAllowance)}</span>
+              </div>
+              <div className="flex justify-between py-2 px-2 bg-slate-50 font-bold border-t border-slate-200">
+                <span className="text-slate-900">Total Gross Earnings</span>
+                <span className="text-orange-600">{formatBDT(payslip.grossSalary)}</span>
               </div>
             </div>
           </div>
@@ -188,7 +170,7 @@ export function PayslipModal({ payslip, open, onClose }: PayslipModalProps) {
                 {formatBDT(payslip.netPayable)}
               </span>
               <span className="text-xs text-orange-800/80 block mt-0.5">
-                One Lakh Fifty-Two Thousand Four Hundred Taka Only
+                Direct Bank Transfer • Monthly Net Payable
               </span>
             </div>
             <div className="text-left sm:text-right text-xs text-slate-500">

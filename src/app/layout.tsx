@@ -5,6 +5,10 @@ import { AppShell } from "@/components/layout/app-shell";
 export const metadata: Metadata = {
   title: "Bayshore HR - HRMS Dashboard | Bayshore Communication",
   description: "Modern, premium HR Management System for Bayshore Communication.",
+  icons: {
+    icon: "/bayshore-circle-logo.png",
+    apple: "/bayshore-circle-logo.png",
+  },
 };
 
 export default function RootLayout({

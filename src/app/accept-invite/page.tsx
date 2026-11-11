@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Sparkles,
   Lock,
   Eye,
   EyeOff,
@@ -19,6 +18,7 @@ import {
   Loader2,
   UserCheck,
 } from "lucide-react";
+import { BayshoreLogo } from "@/components/common/bayshore-logo";
 
 interface InviteEmployeeInfo {
   employeeId: string;
@@ -131,8 +131,8 @@ function AcceptInviteContent() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-600/30 mb-3">
-          <Sparkles className="h-6 w-6" />
+        <div className="mb-3 flex justify-center">
+          <BayshoreLogo size={56} className="shadow-md" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Bayshore <span className="text-orange-600">HR</span>

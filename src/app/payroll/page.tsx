@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { CreditCard, Search, CheckCircle2, FileDown, ShieldCheck, Receipt } from "lucide-react";
+import { CreditCard, Search, CheckCircle2, FileDown, Receipt } from "lucide-react";
 import { useHRMS } from "@/context/hrms-context";
 import { useToast } from "@/context/toast-context";
 import { formatBDT } from "@/lib/utils";
@@ -29,8 +29,7 @@ export default function AdminPayrollPage() {
   const totalApprovedClaims = expenseClaims
     .filter((c) => c.status === "Approved" || c.status === "Reimbursed")
     .reduce((acc, c) => acc + c.amount, 0);
-  const estimatedTaxTotal = Math.round(totalGrossPayroll * 0.08);
-  const netPayableTotal = totalGrossPayroll - estimatedTaxTotal + totalApprovedClaims;
+  const netPayableTotal = totalGrossPayroll + totalApprovedClaims;
 
   const handleRunPayrollBatch = () => {
     setDisbursedIds(employees.map((e) => e.id));
@@ -49,7 +48,7 @@ export default function AdminPayrollPage() {
             Payroll &amp; Salary Disbursements
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            November 2026 monthly salary cycle in Bangladeshi Taka (৳ BDT) with AIT &amp; e-Claim settlements.
+            November 2026 monthly salary cycle in Bangladeshi Taka (৳ BDT) with e-Claim settlements.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -72,7 +71,7 @@ export default function AdminPayrollPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Gross Monthly Payroll</span>
@@ -91,15 +90,6 @@ export default function AdminPayrollPage() {
           <p className="text-[11px] text-slate-400 mt-1">Merged into net bank payout</p>
         </Card>
 
-        <Card className="p-5">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>AIT &amp; Provident Withheld</span>
-            <ShieldCheck className="h-4 w-4 text-amber-600" />
-          </div>
-          <p className="text-2xl font-bold text-amber-600 mt-2">{formatBDT(estimatedTaxTotal)}</p>
-          <p className="text-[11px] text-slate-400 mt-1">Statutory NBR deduction estimate</p>
-        </Card>
-
         <Card className="p-5 bg-emerald-50/40 border-emerald-200/80">
           <div className="flex items-center justify-between text-xs text-emerald-800 font-medium">
             <span>Net Bank Disbursement</span>
@@ -115,7 +105,7 @@ export default function AdminPayrollPage() {
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold text-slate-900">Employee Salary Register (৳ BDT)</h2>
-            <p className="text-xs text-slate-500">Monthly gross, estimated AIT withholding, and net transfer</p>
+            <p className="text-xs text-slate-500">Monthly gross salary and direct bank transfer disbursement</p>
           </div>
           <div className="w-full sm:w-64">
             <Input
@@ -134,15 +124,13 @@ export default function AdminPayrollPage() {
                 <th className="py-3 px-5">Employee</th>
                 <th className="py-3 px-4">Department</th>
                 <th className="py-3 px-4">Gross Pay</th>
-                <th className="py-3 px-4">AIT / PF (8%)</th>
                 <th className="py-3 px-4">Net Payable</th>
                 <th className="py-3 px-5 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredEmployees.map((emp) => {
-                const taxDeduction = Math.round(emp.salary * 0.08);
-                const netPay = emp.salary - taxDeduction;
+                const netPay = emp.salary;
                 const isPaid = disbursedIds.includes(emp.id);
 
                 return (
@@ -158,7 +146,6 @@ export default function AdminPayrollPage() {
                     </td>
                     <td className="py-3 px-4 text-slate-600">{emp.department}</td>
                     <td className="py-3 px-4 font-medium text-slate-900">{formatBDT(emp.salary)}</td>
-                    <td className="py-3 px-4 text-red-600">-{formatBDT(taxDeduction)}</td>
                     <td className="py-3 px-4 font-bold text-slate-900">{formatBDT(netPay)}</td>
                     <td className="py-3 px-5 text-right">
                       <Badge variant={isPaid ? "success" : "warning"} dot>

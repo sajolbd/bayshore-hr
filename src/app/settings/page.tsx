@@ -6,9 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 import { useToast } from "@/context/toast-context";
 import { useHRMS } from "@/context/hrms-context";
 import { useAuth } from "@/context/auth-context";
+import { compressAvatarFile } from "@/lib/image-utils";
 import {
   Shield,
   Building,
@@ -23,16 +25,60 @@ import {
   Send,
   Eye,
   EyeOff,
+  Camera,
 } from "lucide-react";
 
 export default function SettingsPage() {
   const { showToast } = useToast();
   const { annualLeavePolicies, officeHolidays } = useHRMS();
-  const { currentUser, isSuperAdmin } = useAuth();
+  const { currentUser, isSuperAdmin, refreshSession } = useAuth();
   const [companyName, setCompanyName] = React.useState("Bayshore Communication");
   const [adminEmail, setAdminEmail] = React.useState(
     currentUser?.email || "shamim.bayshore@gmail.com"
   );
+  const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAdminAvatarUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      const dataUrl = await compressAvatarFile(file);
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: dataUrl }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        showToast(
+          "Photo Update Failed",
+          json.error || "Could not upload profile photo.",
+          "error"
+        );
+        return;
+      }
+      await refreshSession();
+      showToast(
+        "Profile Photo Updated",
+        "Your profile photo has been saved to MongoDB.",
+        "success"
+      );
+    } catch (err) {
+      showToast(
+        "Photo Update Failed",
+        err instanceof Error ? err.message : "Could not process image file.",
+        "error"
+      );
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   // Gmail / SMTP Configuration state
   const [smtpConfigured, setSmtpConfigured] = React.useState(false);
@@ -405,15 +451,50 @@ export default function SettingsPage() {
         <Card className="p-6 space-y-4">
           <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
             <Shield className="h-5 w-5 text-emerald-600" />
-            <h2 className="text-sm font-bold text-slate-900">Role-Based Access Control</h2>
+            <h2 className="text-sm font-bold text-slate-900">Account Profile &amp; Access Control</h2>
           </div>
-          <div className="space-y-2 text-xs text-slate-600">
-            <p>
-              Signed in as: <strong className="text-slate-900">{currentUser?.name || "Admin"}</strong> ({currentUser?.role || "Super Admin"})
-            </p>
-            <p className="text-slate-500">
-              Role permissions: Full Admin (Employees, Payroll, Approvals, System Config)
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <div className="flex items-center gap-3.5">
+              <Avatar
+                src={currentUser?.avatar}
+                alt={currentUser?.name || "Admin"}
+                fallback={(currentUser?.name || "AD").substring(0, 2).toUpperCase()}
+                size="xl"
+                className="h-14 w-14 rounded-2xl ring-2 ring-white shadow-sm"
+              />
+              <div className="space-y-0.5 text-xs text-slate-600">
+                <p>
+                  Signed in as: <strong className="text-slate-900">{currentUser?.name || "Admin"}</strong> ({currentUser?.role || "Super Admin"})
+                </p>
+                <p className="text-slate-500">
+                  Role permissions: Full Admin (Employees, Payroll, Approvals, System Config)
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleAdminAvatarUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isUploadingAvatar}
+                onClick={() => avatarInputRef.current?.click()}
+                className="gap-1.5 bg-white"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Camera className="h-3.5 w-3.5" />
+                )}
+                <span>{isUploadingAvatar ? "Uploading..." : "Change Profile Photo"}</span>
+              </Button>
+            </div>
           </div>
         </Card>
 

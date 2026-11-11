@@ -171,7 +171,7 @@ export function SearchModal() {
                       <span className="p-1.5 rounded-lg bg-purple-100 text-purple-600">
                         <CreditCard className="h-3.5 w-3.5" />
                       </span>
-                      <span>View My Payslips &amp; Tax Deductions</span>
+                      <span>View My Payslips &amp; Compensation</span>
                     </div>
                     <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-purple-600" />
                   </button>

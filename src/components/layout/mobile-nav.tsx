@@ -3,12 +3,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, Sparkles, LogOut, ShieldCheck, User } from "lucide-react";
+import { X, LogOut, ShieldCheck, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHRMS } from "@/context/hrms-context";
 import { useAuth } from "@/context/auth-context";
 import { adminNavItems, employeeNavItems } from "./sidebar";
 import { Avatar } from "@/components/ui/avatar";
+import { BayshoreLogo } from "@/components/common/bayshore-logo";
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -49,9 +50,7 @@ export function MobileNav() {
             onClick={() => setIsMobileNavOpen(false)}
             className="flex items-center gap-3"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-600 text-white shadow-md shadow-orange-600/30">
-              <Sparkles className="h-5 w-5" />
-            </div>
+            <BayshoreLogo size={36} />
             <div>
               <span className="text-base font-bold text-slate-900">
                 Bayshore <span className="text-orange-600">HR</span>

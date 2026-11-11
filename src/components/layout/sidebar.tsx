@@ -20,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Sparkles,
   ShieldCheck,
   User,
   Receipt,
@@ -28,6 +27,7 @@ import {
   HelpCircle,
   Bell,
 } from "lucide-react";
+import { BayshoreLogo } from "@/components/common/bayshore-logo";
 import { cn } from "@/lib/utils";
 import { useHRMS } from "@/context/hrms-context";
 import { useAuth } from "@/context/auth-context";
@@ -115,9 +115,7 @@ export function Sidebar() {
           href={isEmployeeView ? "/employee/dashboard" : "/"}
           className="flex items-center gap-3 overflow-hidden"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white shadow-md shadow-orange-600/30">
-            <Sparkles className="h-5 w-5" />
-          </div>
+          <BayshoreLogo size={40} />
           {!isSidebarCollapsed && (
             <div className="flex flex-col min-w-0 transition-opacity duration-200">
               <span className="text-base font-bold tracking-tight text-slate-900 leading-none">

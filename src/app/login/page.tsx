@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
-  Sparkles,
   Lock,
   Mail,
   Eye,
@@ -16,9 +15,9 @@ import {
   AlertCircle,
   Loader2,
   Building2,
-  Smartphone,
   Download,
 } from "lucide-react";
+import { BayshoreLogo } from "@/components/common/bayshore-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,8 +53,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 selection:bg-orange-100 selection:text-orange-900">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-600/30 mb-3">
-          <Sparkles className="h-6 w-6" />
+        <div className="mb-3 flex justify-center">
+          <BayshoreLogo size={56} className="shadow-md" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Bayshore <span className="text-orange-600">HR</span>
@@ -155,15 +154,25 @@ export default function LoginPage() {
               </p>
             </div>
             <a
-              href="/downloads/Bayshore-HR.apk"
+              href="/downloads/Bayshore-HR.apk?v=1.0.2"
               download="Bayshore-HR.apk"
-              className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/70 px-3.5 py-2.5 text-orange-700 hover:bg-orange-100/70 transition-colors"
+              className="flex items-center justify-between gap-3 rounded-xl border border-orange-200 bg-orange-50/80 px-3.5 py-2.5 text-orange-800 hover:bg-orange-100/80 transition-colors"
             >
-              <span className="flex items-center gap-2 font-semibold">
-                <Smartphone className="h-4 w-4 text-orange-600" />
-                <span>Download Bayshore HR Android App (.apk)</span>
+              <span className="flex items-center gap-2.5 min-w-0">
+                <BayshoreLogo size={28} />
+                <span className="min-w-0">
+                  <span className="block font-bold text-xs text-slate-900 truncate">
+                    Download Bayshore HR Android App
+                  </span>
+                  <span className="block text-[10px] text-orange-700 font-medium">
+                    Bayshore-HR.apk • v1.0.2 (GPS &amp; HR Portal)
+                  </span>
+                </span>
               </span>
-              <Download className="h-4 w-4 text-orange-600 shrink-0" />
+              <span className="inline-flex items-center gap-1 rounded-lg bg-orange-600 px-2.5 py-1.5 text-[11px] font-bold text-white shrink-0 shadow-2xs">
+                <Download className="h-3.5 w-3.5" />
+                <span>APK</span>
+              </span>
             </a>
           </div>
         </Card>
