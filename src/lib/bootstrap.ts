@@ -14,9 +14,14 @@ async function runBootstrap(): Promise<void> {
   const superAdminEmail = (
     process.env.SUPER_ADMIN_EMAIL || "shamim.bayshore@gmail.com"
   )
-    .toLowerCase()
-    .trim();
-  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || "sajolbd";
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .toLowerCase();
+  const superAdminPassword = (
+    process.env.SUPER_ADMIN_PASSWORD || "sajolbd"
+  )
+    .trim()
+    .replace(/^["']|["']$/g, "");
 
   const existingSuperAdmin = await UserModel.findOne({
     email: superAdminEmail,

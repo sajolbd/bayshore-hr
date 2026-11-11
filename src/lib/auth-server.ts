@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { connectToDatabase } from "./mongodb";
+import { getJwtSecretValue } from "./crypto-utils";
 import { UserModel, UserRoleType, UserStatusType } from "@/models/User";
 
 export const SESSION_COOKIE_NAME = "bayshore_session";
@@ -31,9 +32,9 @@ interface JWTPayload {
 }
 
 function getJwtSecretKey(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
+  const secret = getJwtSecretValue();
   if (!secret) {
-    throw new Error("JWT_SECRET environment variable is not configured in .env.local");
+    throw new Error("JWT_SECRET environment variable is missing in server configuration.");
   }
   return new TextEncoder().encode(secret);
 }
@@ -164,11 +165,27 @@ export function generateInviteToken(): {
 }
 
 export function getAppBaseUrl(request: NextRequest): string {
-  const configured = process.env.NEXT_PUBLIC_APP_URL;
-  if (configured && configured.trim().length > 0) {
-    return configured.replace(/\/$/, "");
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0].trim();
+  const proto = forwardedProto || request.nextUrl.protocol.replace(":", "") || "https";
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0].trim();
+  const host = forwardedHost || request.headers.get("host") || request.nextUrl.host;
+  const isLocalRequest =
+    !host || host.includes("localhost") || host.includes("127.0.0.1");
+
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  if (configured) {
+    const isConfiguredLocal =
+      configured.includes("localhost") || configured.includes("127.0.0.1");
+    if (!isConfiguredLocal || isLocalRequest) {
+      return configured;
+    }
   }
-  const proto = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", "");
-  const host = request.headers.get("host") || request.nextUrl.host;
-  return `${proto}://${host}`;
+
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  const vercelHost =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  return vercelHost ? `https://${vercelHost}` : "http://localhost:3000";
 }

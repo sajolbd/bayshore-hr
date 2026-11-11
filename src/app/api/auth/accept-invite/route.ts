@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
+import { connectToDatabase, diagnoseServerError } from "@/lib/mongodb";
 import { ensureDatabaseBootstrapped } from "@/lib/bootstrap";
 import { UserModel } from "@/models/User";
 import { ActivityLogModel } from "@/models/ActivityLog";
@@ -53,9 +53,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("Verify invite error:", err);
+    const diag = diagnoseServerError(err);
     return NextResponse.json(
-      { valid: false, error: "Unable to verify invitation token." },
-      { status: 500 }
+      { valid: false, error: diag.message, code: diag.code },
+      { status: diag.status }
     );
   }
 }
@@ -153,9 +154,10 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (err) {
     console.error("Accept invite error:", err);
+    const diag = diagnoseServerError(err);
     return NextResponse.json(
-      { error: "Failed to activate employee account." },
-      { status: 500 }
+      { error: diag.message, code: diag.code },
+      { status: diag.status }
     );
   }
 }

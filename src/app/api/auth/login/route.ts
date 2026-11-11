@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
+import { connectToDatabase, diagnoseServerError } from "@/lib/mongodb";
 import { ensureDatabaseBootstrapped } from "@/lib/bootstrap";
 import { UserModel } from "@/models/User";
 import { attachSessionCookie, signSessionToken } from "@/lib/auth-server";
@@ -103,9 +103,10 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (err) {
     console.error("Login error:", err);
+    const diag = diagnoseServerError(err);
     return NextResponse.json(
-      { error: "Unable to complete sign-in. Please verify database connectivity." },
-      { status: 500 }
+      { error: diag.message, code: diag.code },
+      { status: diag.status }
     );
   }
 }

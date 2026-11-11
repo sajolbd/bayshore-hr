@@ -1,9 +1,26 @@
 import crypto from "crypto";
 
+function stripWrappingQuotes(value?: string): string {
+  if (!value) return "";
+  return value.trim().replace(/^["']|["']$/g, "").trim();
+}
+
+/**
+ * Resolves the server signing/encryption secret from standard environment variables.
+ */
+export function getJwtSecretValue(): string | null {
+  const secret =
+    stripWrappingQuotes(process.env.JWT_SECRET) ||
+    stripWrappingQuotes(process.env.AUTH_SECRET) ||
+    stripWrappingQuotes(process.env.NEXTAUTH_SECRET) ||
+    stripWrappingQuotes(process.env.SESSION_SECRET);
+  return secret || null;
+}
+
 function getEncryptionKey(): Buffer {
-  const secret = process.env.JWT_SECRET;
+  const secret = getJwtSecretValue();
   if (!secret) {
-    throw new Error("JWT_SECRET environment variable is required for encryption.");
+    throw new Error("JWT_SECRET environment variable is missing in server configuration.");
   }
   return crypto.createHash("sha256").update(secret).digest();
 }
@@ -37,4 +54,3 @@ export function decryptSecret(payload: string): string {
   ]);
   return decrypted.toString("utf8");
 }
-
