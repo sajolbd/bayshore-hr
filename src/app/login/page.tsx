@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Loader2,
   Building2,
+  Smartphone,
+  Download,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -143,13 +145,26 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-500 leading-relaxed space-y-1">
-            <p className="font-semibold text-slate-700">New Employee?</p>
-            <p>
-              Employees are onboarded exclusively by the Super Admin. Check your
-              work email for the invitation link to set your password and activate
-              your Employee Self-Service portal.
-            </p>
+          <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-500 leading-relaxed space-y-3">
+            <div className="space-y-1">
+              <p className="font-semibold text-slate-700">New Employee?</p>
+              <p>
+                Employees are onboarded exclusively by the Super Admin. Check your
+                work email for the invitation link to set your password and activate
+                your Employee Self-Service portal.
+              </p>
+            </div>
+            <a
+              href="/downloads/Bayshore-HR.apk"
+              download="Bayshore-HR.apk"
+              className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/70 px-3.5 py-2.5 text-orange-700 hover:bg-orange-100/70 transition-colors"
+            >
+              <span className="flex items-center gap-2 font-semibold">
+                <Smartphone className="h-4 w-4 text-orange-600" />
+                <span>Download Bayshore HR Android App (.apk)</span>
+              </span>
+              <Download className="h-4 w-4 text-orange-600 shrink-0" />
+            </a>
           </div>
         </Card>
 
