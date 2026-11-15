@@ -59,7 +59,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. If no record at all exists in database for today, create one automatically
+    let isNewlyCreated = false;
     if (!record) {
+      isNewlyCreated = true;
       const defaultCheckInTime = "09:00 AM";
       const defaultCheckInAt = new Date(now.getTime() - 8 * 3600 * 1000);
       record = await AttendanceModel.create({
@@ -93,32 +95,38 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Calculate work hours safely
-    const checkInDate = record.checkInAt
-      ? new Date(record.checkInAt)
-      : new Date(now.getTime() - 8 * 3600 * 1000);
-    const checkInMs = Number.isFinite(checkInDate.getTime())
-      ? checkInDate.getTime()
-      : now.getTime();
-    const elapsedSeconds = Math.max(60, Math.floor((now.getTime() - checkInMs) / 1000));
-    const hours = Math.floor(elapsedSeconds / 3600);
-    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
-    const workHours = `${hours}h ${minutes}m`;
+    let safeRec = record;
+    let workHours = record.workHours || "8h 00m";
 
-    const updatedRecord = await AttendanceModel.findByIdAndUpdate(
-      record._id,
-      {
-        $set: {
-          checkOut: timeLabel,
-          checkOutAt: now,
-          workHours,
-          clockOutLocation: "Gulshan HQ",
+    if (!isNewlyCreated) {
+      // Calculate work hours safely
+      const checkInDate = record.checkInAt
+        ? new Date(record.checkInAt)
+        : new Date(now.getTime() - 8 * 3600 * 1000);
+      const checkInMs = Number.isFinite(checkInDate.getTime())
+        ? checkInDate.getTime()
+        : now.getTime();
+      const elapsedSeconds = Math.max(60, Math.floor((now.getTime() - checkInMs) / 1000));
+      const hours = Math.floor(elapsedSeconds / 3600);
+      const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+      workHours = `${hours}h ${minutes}m`;
+
+      const updatedRecord = await AttendanceModel.findByIdAndUpdate(
+        record._id,
+        {
+          $set: {
+            checkOut: timeLabel,
+            checkOutAt: now,
+            workHours,
+            clockOutLocation: "Gulshan HQ",
+          },
         },
-      },
-      { new: true }
-    );
-
-    const safeRec = updatedRecord || record;
+        { new: true }
+      );
+      if (updatedRecord) {
+        safeRec = updatedRecord;
+      }
+    }
 
     await ActivityLogModel.create({
       user: session.name,
@@ -143,9 +151,13 @@ export async function POST(request: NextRequest) {
         dateKey: safeRec.dateKey,
         day: safeRec.dayLabel,
         checkIn: safeRec.checkIn,
-        checkInAt: safeRec.checkInAt ? safeRec.checkInAt.toISOString() : now.toISOString(),
+        checkInAt: safeRec.checkInAt
+          ? new Date(safeRec.checkInAt).toISOString()
+          : now.toISOString(),
         checkOut: safeRec.checkOut || timeLabel,
-        checkOutAt: safeRec.checkOutAt ? safeRec.checkOutAt.toISOString() : now.toISOString(),
+        checkOutAt: safeRec.checkOutAt
+          ? new Date(safeRec.checkOutAt).toISOString()
+          : now.toISOString(),
         workHours: safeRec.workHours || workHours,
         status: safeRec.status,
         location: safeRec.location,
