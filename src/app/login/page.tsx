@@ -16,6 +16,7 @@ import {
   Loader2,
   Building2,
   Download,
+  Apple,
 } from "lucide-react";
 import { BayshoreLogo } from "@/components/common/bayshore-logo";
 
@@ -172,6 +173,30 @@ export default function LoginPage() {
               <span className="inline-flex items-center gap-1 rounded-lg bg-orange-600 px-2.5 py-1.5 text-[11px] font-bold text-white shrink-0 shadow-2xs">
                 <Download className="h-3.5 w-3.5" />
                 <span>APK</span>
+              </span>
+            </a>
+
+            <a
+              href="/downloads/Bayshore-HR-iOS.zip"
+              download="Bayshore-HR-iOS.zip"
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/90 px-3.5 py-2.5 text-slate-800 hover:bg-slate-100 transition-colors"
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <div className="h-7 w-7 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
+                  <Apple className="h-4 w-4" />
+                </div>
+                <span className="min-w-0">
+                  <span className="block font-bold text-xs text-slate-900 truncate">
+                    Download Bayshore HR iOS App
+                  </span>
+                  <span className="block text-[10px] text-slate-500 font-medium">
+                    Bayshore-HR-iOS.zip • Swift &amp; SwiftUI (iOS 17+)
+                  </span>
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-bold text-white shrink-0 shadow-2xs">
+                <Download className="h-3.5 w-3.5" />
+                <span>iOS</span>
               </span>
             </a>
           </div>
