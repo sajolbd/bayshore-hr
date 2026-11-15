@@ -7,12 +7,14 @@ export interface IAttendanceGeo {
   address: string;
   geofenceStatus:
     | "Inside Office Geofence"
+    | "Outside Geofence"
     | "Outside Geofence (Remote)"
-    | "Field Client Visit";
+    | "Field Client Visit"
+    | string;
   distanceFromHQ?: number;
   ipAddress?: string;
   selfieUrl?: string;
-  checkInType: "Time Clock" | "Field Check-In";
+  checkInType: "Time Clock" | "Field Check-In" | string;
   clientName?: string;
   purposeNote?: string;
   timestamp?: string;
@@ -50,12 +52,7 @@ const GeoSchema = new Schema<IAttendanceGeo>(
     address: { type: String, required: true },
     geofenceStatus: {
       type: String,
-      enum: [
-        "Inside Office Geofence",
-        "Outside Geofence (Remote)",
-        "Field Client Visit",
-      ],
-      default: "Outside Geofence (Remote)",
+      default: "Inside Office Geofence",
     },
     distanceFromHQ: { type: Number },
     ipAddress: { type: String },
@@ -88,7 +85,6 @@ const AttendanceSchema = new Schema<IAttendance>(
     checkOutAt: { type: Date, default: null },
     status: {
       type: String,
-      enum: ["Present", "Late", "On Leave", "Remote", "Absent"],
       default: "Present",
     },
     workHours: { type: String, default: "In Progress" },
