@@ -31,7 +31,7 @@ export default function AnnouncementsPage() {
         </Button>
       </div>
 
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         <Announcements />
       </div>
     </div>

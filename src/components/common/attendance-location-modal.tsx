@@ -29,7 +29,7 @@ export function AttendanceLocationModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Attendance Punch & Geolocation Details"
-      description="GPS verification and time-clock audit trail as captured by HRMS Time Clock."
+      description="Location verification and time-clock audit trail as captured by HRMS Time Clock."
       size="lg"
     >
       <div className="space-y-5">

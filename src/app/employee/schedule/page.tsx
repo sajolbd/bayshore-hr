@@ -33,16 +33,16 @@ const weeklyScheduleData = [
   {
     day: "Tuesday",
     date: "Nov 10, 2026",
-    shiftName: "Remote Engineering Sprint Shift",
+    shiftName: "Core Engineering Onsite Shift",
     timing: "09:30 AM – 06:30 PM",
     breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Remote / Work From Home",
-    status: "Remote Day",
+    location: "Gulshan HQ (Office)",
+    status: "Working Day",
   },
   {
     day: "Wednesday",
     date: "Nov 11, 2026",
-    shiftName: "General Engineering Hybrid Shift",
+    shiftName: "General Engineering Onsite Shift",
     timing: "09:30 AM – 06:30 PM",
     breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
     location: "Gulshan HQ (Office)",
@@ -51,11 +51,11 @@ const weeklyScheduleData = [
   {
     day: "Thursday",
     date: "Nov 12, 2026",
-    shiftName: "Remote Engineering Sprint Shift",
+    shiftName: "Core Engineering Onsite Shift",
     timing: "09:30 AM – 06:30 PM",
     breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Remote / Work From Home",
-    status: "Remote Day",
+    location: "Gulshan HQ (Office)",
+    status: "Working Day",
   },
   {
     day: "Friday",
@@ -192,8 +192,6 @@ export default function EmployeeSchedulePage() {
                   variant={
                     item.status === "Working Day"
                       ? "success"
-                      : item.status === "Remote Day"
-                      ? "info"
                       : "neutral"
                   }
                   className="text-[10px]"

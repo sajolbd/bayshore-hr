@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       lng > 180
     ) {
       return NextResponse.json(
-        { error: "Invalid GPS latitude/longitude coordinates." },
+        { error: "Invalid latitude/longitude coordinates." },
         { status: 400 }
       );
     }

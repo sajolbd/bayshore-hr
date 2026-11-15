@@ -11,6 +11,7 @@ import { UserModel } from "@/models/User";
 import { ActivityLogModel } from "@/models/ActivityLog";
 import { sendEmployeeInviteEmail } from "@/lib/mailer";
 import { getClientIp } from "@/lib/geo";
+import { getDefaultCartoonAvatar } from "@/lib/avatar";
 
 function mapUserToEmployeeDto(doc: {
   employeeId: string;
@@ -147,8 +148,7 @@ export async function POST(request: NextRequest) {
     const { rawToken, tokenHash } = generateInviteToken();
     const inviteExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
     const avatar =
-      body.avatar ||
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80";
+      body.avatar?.trim() || getDefaultCartoonAvatar(name || employeeId);
 
     const createdUser = await UserModel.create({
       employeeId,
@@ -180,6 +180,8 @@ export async function POST(request: NextRequest) {
       department,
       inviteUrl,
       expiresHours: 48,
+      adminName: session.name,
+      adminEmail: session.email,
     });
 
     await ActivityLogModel.create({

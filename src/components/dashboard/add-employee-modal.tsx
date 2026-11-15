@@ -11,6 +11,7 @@ import { useHRMS } from "@/context/hrms-context";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { Department, Employee, InviteEmailResultDto } from "@/types";
+import { getDefaultCartoonAvatar } from "@/lib/avatar";
 import {
   User,
   Mail,
@@ -97,8 +98,7 @@ export function AddEmployeeModal() {
       salary: Number(formData.salary) || 60000,
       location: formData.location.trim(),
       joinDate: formData.joinDate,
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      avatar: getDefaultCartoonAvatar(formData.name.trim() || formData.email.trim()),
     });
 
     setIsSubmitting(false);

@@ -5,7 +5,7 @@ import { getSessionUser, isAdminRole } from "@/lib/auth-server";
 import { AttendanceModel } from "@/models/Attendance";
 import { getDhakaDateInfo } from "@/lib/geo";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getSessionUser();
     if (!session) {
@@ -16,15 +16,19 @@ export async function GET() {
     await ensureDatabaseBootstrapped();
 
     const { dateKey } = getDhakaDateInfo();
+    const { searchParams } = new URL(request.url);
+    const dateFilter = searchParams.get("date"); // e.g. "2026-11-15" or "all"
 
     if (isAdminRole(session.role)) {
-      const records = await AttendanceModel.find()
+      const query = dateFilter && dateFilter !== "all" ? { dateKey: dateFilter } : {};
+      const records = await AttendanceModel.find(query)
         .sort({ dateKey: -1, checkInAt: -1 })
         .limit(200)
         .lean();
 
       return NextResponse.json({
         dateKey,
+        selectedDate: dateFilter || dateKey,
         records: records.map((r) => ({
           id: r._id.toString(),
           employeeId: r.employeeId,
@@ -48,9 +52,12 @@ export async function GET() {
     }
 
     // Strict employee isolation: return ONLY own attendance records
-    const myRecords = await AttendanceModel.find({
-      employeeId: session.employeeId,
-    })
+    const empQuery: Record<string, unknown> = { employeeId: session.employeeId };
+    if (dateFilter && dateFilter !== "all") {
+      empQuery.dateKey = dateFilter;
+    }
+
+    const myRecords = await AttendanceModel.find(empQuery)
       .sort({ dateKey: -1, checkInAt: -1 })
       .limit(90)
       .lean();

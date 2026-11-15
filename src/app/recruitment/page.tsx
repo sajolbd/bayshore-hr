@@ -11,7 +11,7 @@ const openRoles = [
   {
     title: "Senior Next.js Frontend Developer",
     department: "Engineering",
-    location: "Remote (US/Canada)",
+    location: "Gulshan HQ, Dhaka",
     type: "Full-Time",
     applicants: 42,
     stage: "Interviewing",
@@ -20,7 +20,7 @@ const openRoles = [
   {
     title: "Staff Security & Infrastructure Engineer",
     department: "Engineering",
-    location: "Austin, TX (Hybrid)",
+    location: "Gulshan HQ, Dhaka",
     type: "Full-Time",
     applicants: 19,
     stage: "Technical Screen",

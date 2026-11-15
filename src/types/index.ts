@@ -40,7 +40,11 @@ export interface GeolocationData {
   longitude: number;
   accuracy: number;
   address: string;
-  geofenceStatus: "Inside Office Geofence" | "Outside Geofence (Remote)" | "Field Client Visit";
+  geofenceStatus:
+    | "Inside Office Geofence"
+    | "Outside Geofence"
+    | "Outside Geofence (Remote)"
+    | "Field Client Visit";
   distanceFromHQ?: number; // in meters
   ipAddress?: string;
   selfieUrl?: string;
@@ -58,6 +62,8 @@ export interface AttendanceRecord {
   avatar: string;
   department: Department;
   role: string;
+  dateKey?: string;
+  dayLabel?: string;
   checkIn: string;
   checkOut: string | null;
   status: AttendanceStatus;

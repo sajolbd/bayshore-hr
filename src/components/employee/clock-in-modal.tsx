@@ -66,7 +66,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
     latitude: BAYSHORE_HQ_LAT,
     longitude: BAYSHORE_HQ_LNG,
     accuracy: 10,
-    address: "Acquiring your live GPS location...",
+    address: "Acquiring your live location...",
     geofenceStatus: "Inside Office Geofence",
     distanceFromHQ: 0,
     selfieUrl: profile.avatar,
@@ -121,7 +121,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
             if (addrData.shortLocation) shortLoc = addrData.shortLocation;
           }
         } catch {
-          // Keep numeric GPS coordinates if reverse lookup times out
+          // Keep numeric coordinates if reverse lookup times out
         }
 
         setShortLocation(shortLoc);
@@ -135,7 +135,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
               ? "Field Client Visit"
               : inGeofence
               ? "Inside Office Geofence"
-              : "Outside Geofence (Remote)",
+              : "Outside Geofence",
           distanceFromHQ: dist,
           selfieUrl: profile.avatar,
           checkInType: punchType,
@@ -147,8 +147,8 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
         setIsLocating(false);
         const msg =
           err.code === err.PERMISSION_DENIED
-            ? "Location permission denied. Allow browser location access and click Re-scan GPS, or pick an office/remote preset below."
-            : "Could not detect device GPS signal right now. Try Re-scan GPS or select a location preset.";
+            ? "Location permission denied. Allow browser location access and click Re-scan Location, or pick an office preset below."
+            : "Could not detect device location signal right now. Try Re-scan Location or select an office preset.";
         setGpsError(msg);
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
@@ -164,7 +164,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
   }, [isOpen, detectLocation]);
 
   const handleSelectPreset = (
-    preset: "gulshan" | "banani" | "bashundhara" | "remote"
+    preset: "gulshan" | "banani" | "bashundhara" | "dhanmondi"
   ) => {
     setGpsError(null);
     setHasGpsFix(true);
@@ -210,14 +210,14 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
         purposeNote: "On-Site Enterprise Architecture Review",
       });
     } else {
-      setShortLocation("Uttara Sector 3 (Remote)");
+      setShortLocation("Dhanmondi Branch");
       setGeoData({
-        latitude: 23.869,
-        longitude: 90.3986,
-        accuracy: 18,
-        address: "Sector 3, Uttara Model Town, Dhaka 1230",
-        geofenceStatus: "Outside Geofence (Remote)",
-        distanceFromHQ: 8600,
+        latitude: 23.7465,
+        longitude: 90.3760,
+        accuracy: 12,
+        address: "Road 27, Dhanmondi, Dhaka",
+        geofenceStatus: "Inside Office Geofence",
+        distanceFromHQ: 5400,
         selfieUrl: profile.avatar,
         checkInType: punchType,
       });
@@ -254,7 +254,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Clock In (Live GPS Geolocation)"
+      title="Clock In (Live Location Verification)"
       description="Your real-time coordinates, verified address, and check-in time are logged to MongoDB and shown to HR Administration."
       size="lg"
     >
@@ -270,7 +270,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
                 geofenceStatus:
                   (prev.distanceFromHQ || 0) <= 500
                     ? "Inside Office Geofence"
-                    : "Outside Geofence (Remote)",
+                    : "Outside Geofence",
               }));
             }}
             className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -280,7 +280,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
             }`}
           >
             <Clock className="h-4 w-4 text-orange-600" />
-            <span>Office / Remote Clock-In</span>
+            <span>Office Clock-In</span>
           </button>
 
           <button
@@ -342,7 +342,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
               <MapPin className="h-4 w-4 text-orange-600" />
               <span>
                 {isLocating
-                  ? "Detecting Live Device GPS..."
+                  ? "Detecting Live Location..."
                   : hasGpsFix
                   ? `Detected Location: ${shortLocation || geoData.address}`
                   : "Location Preview"}
@@ -358,7 +358,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
               <RefreshCw
                 className={`h-3 w-3 ${isLocating ? "animate-spin" : ""}`}
               />
-              <span>{isLocating ? "Acquiring GPS..." : "Capture My Live GPS"}</span>
+              <span>{isLocating ? "Acquiring Location..." : "Capture Live Location"}</span>
             </button>
           </div>
 
@@ -391,10 +391,10 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
             </button>
             <button
               type="button"
-              onClick={() => handleSelectPreset("remote")}
+              onClick={() => handleSelectPreset("dhanmondi")}
               className="px-2 py-0.5 rounded-md border border-slate-200 bg-white text-[11px] text-slate-700 hover:border-amber-500 hover:text-amber-600 transition-colors cursor-pointer"
             >
-              Remote (Uttara)
+              Dhanmondi Branch
             </button>
           </div>
         </div>
@@ -407,7 +407,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
                 Selfie Verification Stamp ({profile.name})
               </span>
               <span className="text-[11px] text-slate-500">
-                Verified identity badge stored with GPS coordinates
+                Verified identity badge stored with location coordinates
               </span>
             </div>
           </div>
@@ -432,7 +432,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Saving GPS Punch...</span>
+                <span>Saving Clock-In...</span>
               </>
             ) : (
               <>

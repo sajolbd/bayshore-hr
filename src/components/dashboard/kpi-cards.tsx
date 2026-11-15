@@ -27,7 +27,7 @@ export function KPICards() {
     (r) =>
       (!("dateKey" in r) ||
         (r as unknown as { dateKey?: string }).dateKey === todayKey) &&
-      (r.status === "Present" || r.status === "Remote" || r.status === "Late")
+      (r.status === "Present" || r.status === "Late")
   ).length;
   const pendingLeaves = leaveRequests.filter((l) => l.status === "Pending").length;
 
@@ -54,7 +54,7 @@ export function KPICards() {
       value: presentToday.toString(),
       trend: attendancePct,
       isPositive: true,
-      subtext: "GPS-verified attendance logs",
+      subtext: "Verified office attendance logs",
       icon: UserCheck,
       iconBg: "bg-emerald-50 text-emerald-600 border border-emerald-200/50",
     },

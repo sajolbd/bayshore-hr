@@ -165,7 +165,7 @@ export default function LoginPage() {
                     Download Bayshore HR Android App
                   </span>
                   <span className="block text-[10px] text-orange-700 font-medium">
-                    Bayshore-HR.apk • v1.0.2 (GPS &amp; HR Portal)
+                    Bayshore-HR.apk • v1.0.2 (HR &amp; Attendance Portal)
                   </span>
                 </span>
               </span>

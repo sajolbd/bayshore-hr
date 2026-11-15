@@ -115,12 +115,13 @@ export function useLiveShiftSeconds(): number {
   );
 }
 
+import { getDefaultCartoonAvatar } from "@/lib/avatar";
+
 const emptyProfile: EmployeeProfile = {
   id: "",
   name: "",
   email: "",
-  avatar:
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+  avatar: getDefaultCartoonAvatar("employee"),
   role: "Employee",
   department: "Engineering",
   phone: "",
@@ -128,8 +129,7 @@ const emptyProfile: EmployeeProfile = {
   joinDate: "",
   reportingManager: "Shamim Ahsan",
   reportingManagerRole: "Super Admin",
-  reportingManagerAvatar:
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+  reportingManagerAvatar: getDefaultCartoonAvatar("shamim-ahsan"),
   bloodGroup: "O+",
   nidOrPassport: "Verified on Onboarding",
   dateOfBirth: "Not Specified",
@@ -478,7 +478,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
         if (!res.ok || !data.record) {
           showToast(
             "Clock-In Failed",
-            data.error || "Unable to verify GPS clock-in.",
+            data.error || "Unable to verify clock-in location.",
             "error"
           );
           return false;
@@ -505,7 +505,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
         setNotifications((prev) => [
           {
             id: `enotif-${Date.now()}`,
-            title: "Clocked In Successfully (GPS Saved)",
+            title: "Clocked In Successfully",
             message: `Check-in at ${data.record!.checkIn} from ${
               data.record!.geo?.address || data.record!.location
             }.`,
@@ -518,7 +518,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
 
         void refreshHRMSData();
         showToast(
-          "Clocked In (GPS Logged)",
+          "Clocked In (Location Verified)",
           `Verified location: ${data.record.location}`,
           "success"
         );

@@ -107,7 +107,7 @@ export async function reverseGeocodeCoordinates(
     });
 
     if (!res.ok) {
-      return { address: `GPS (${fallbackCoord})`, shortLocation: fallbackCoord };
+      return { address: `Location (${fallbackCoord})`, shortLocation: fallbackCoord };
     }
 
     const data = (await res.json()) as {
@@ -135,10 +135,10 @@ export async function reverseGeocodeCoordinates(
 
     const address =
       data.display_name ||
-      (shortParts.length > 0 ? shortParts.join(", ") : `GPS (${fallbackCoord})`);
+      (shortParts.length > 0 ? shortParts.join(", ") : `Location (${fallbackCoord})`);
 
     return { address, shortLocation };
   } catch {
-    return { address: `GPS (${fallbackCoord})`, shortLocation: fallbackCoord };
+    return { address: `Location (${fallbackCoord})`, shortLocation: fallbackCoord };
   }
 }

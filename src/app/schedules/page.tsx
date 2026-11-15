@@ -20,10 +20,10 @@ const shiftTemplates = [
   },
   {
     id: "shift-flex",
-    name: "Hybrid Tech Flex",
+    name: "Tech Operations Shift",
     window: "10:00 AM – 07:00 PM",
     breakTime: "01:30 PM – 02:30 PM",
-    location: "Gulshan HQ / Remote",
+    location: "Gulshan HQ (Office)",
     assignedCount: 58,
   },
   {

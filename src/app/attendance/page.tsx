@@ -19,7 +19,7 @@ export default function AttendancePage() {
             Attendance &amp; Time Tracking
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Biometric logs, clock-in compliance, remote work status, and work hour logs.
+            Biometric logs, clock-in compliance, location verification, and work hour logs.
           </p>
         </div>
         <Button
@@ -54,11 +54,11 @@ export default function AttendancePage() {
 
         <Card className="p-4 border-l-4 border-l-blue-500">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Remote / WFH Ratio</span>
+            <span className="text-xs font-semibold text-slate-500">Onsite Compliance Ratio</span>
             <CalendarCheck className="h-4 w-4 text-blue-600" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-900 mt-2">18.5%</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">46 employees active remotely</p>
+          <p className="text-2xl font-extrabold text-slate-900 mt-2">100%</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">All employees 100% onsite at Gulshan HQ</p>
         </Card>
       </div>
 

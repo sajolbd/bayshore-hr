@@ -59,17 +59,17 @@ export function LocationMapView({
                   ? "Inside Office Geofence"
                   : isFieldVisit
                   ? "Field Client Visit (On-Site)"
-                  : "Remote Work (Outside Geofence)"}
+                  : "Office Field Visit"}
               </span>
               <Badge
                 variant={isInsideGeofence ? "success" : isFieldVisit ? "info" : "warning"}
                 className="text-[10px] px-1.5 py-0"
               >
-                GPS Verified
+                Location Verified
               </Badge>
             </div>
             <p className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-              <span>GPS Accuracy: ±{accuracy}m</span>
+              <span>Accuracy: ±{accuracy}m</span>
               <span>•</span>
               <span>Coordinates: {lat.toFixed(4)}° N, {lng.toFixed(4)}° E</span>
             </p>
@@ -90,7 +90,7 @@ export function LocationMapView({
       {/* Embedded Map Visualizer */}
       <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner">
         <iframe
-          title="Attendance GPS Location Map"
+          title="Attendance Location Map"
           src={mapUrl}
           className={`w-full ${compact ? "h-44" : "h-64"} border-0`}
           loading="lazy"

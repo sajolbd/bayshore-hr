@@ -11,6 +11,8 @@ export interface InviteEmailPayload {
   department: string;
   inviteUrl: string;
   expiresHours?: number;
+  adminName?: string;
+  adminEmail?: string;
 }
 
 export interface InviteEmailResult {
@@ -85,7 +87,7 @@ function buildInviteHtml(payload: InviteEmailPayload): string {
         <div style="padding: 28px; color: #0f172a;">
           <p style="margin: 0 0 12px; font-size: 15px; font-weight: 600;">Hello ${payload.employeeName},</p>
           <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #475569;">
-            You have been onboarded to <strong>Bayshore HR</strong> (Bayshore Communication) by the Super Administrator. Please accept your invitation and set your login password to activate your Employee Self-Service portal.
+            You have been onboarded to <strong>Bayshore HR</strong> (Bayshore Communication) by Super Administrator <strong>${payload.adminName || "Super Admin"}</strong>${payload.adminEmail ? ` (<a href="mailto:${payload.adminEmail}" style="color: #ea580c; text-decoration: none;">${payload.adminEmail}</a>)` : ""}. Please accept your invitation and set your login password to activate your Employee Self-Service portal.
           </p>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 22px; font-size: 13px; color: #334155;">
             <div><strong>Employee ID:</strong> ${payload.employeeId}</div>
@@ -177,8 +179,13 @@ export async function sendEmployeeInviteEmail(
         auth: { user: smtp.user, pass: smtp.pass },
       });
 
+      const senderName = payload.adminName || smtp.fromName || "Bayshore HR Super Admin";
+      const fromHeader = `"${senderName}" <${smtp.user}>`;
+      const replyTo = payload.adminEmail || smtp.user;
+
       await transporter.sendMail({
-        from: `"${smtp.fromName}" <${smtp.user}>`,
+        from: fromHeader,
+        replyTo,
         to: payload.to,
         subject,
         text,

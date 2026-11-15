@@ -24,7 +24,7 @@ const companyPoliciesList = [
   },
   {
     id: "POL-02",
-    title: "Hybrid & Remote Work Governance Code",
+    title: "Onsite Work & Workplace Governance Code",
     category: "Operational",
     version: "v2.1",
     updatedDate: "Mar 15, 2026",

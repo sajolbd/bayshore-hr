@@ -15,7 +15,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useHRMS } from "@/context/hrms-context";
-import { Search, Filter, Clock, ArrowRight, MapPin } from "lucide-react";
+import { Search, Clock, ArrowRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -25,15 +25,38 @@ export function AttendanceTable() {
   const [departmentFilter, setDepartmentFilter] = React.useState("All");
   const [statusFilter, setStatusFilter] = React.useState("All");
 
+  const todayDhakaKey = React.useMemo(() => {
+    return new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Dhaka",
+    });
+  }, []);
+
+  const [dateFilterMode, setDateFilterMode] = React.useState<"today" | "custom" | "all">("today");
+  const [customDate, setCustomDate] = React.useState<string>(todayDhakaKey);
+
   const filteredRecords = attendanceRecords.filter((record) => {
+    // 1. Date Filter (Default: Today's Only)
+    if (dateFilterMode === "today") {
+      if (record.dateKey && record.dateKey !== todayDhakaKey) {
+        return false;
+      }
+    } else if (dateFilterMode === "custom") {
+      if (record.dateKey && record.dateKey !== customDate) {
+        return false;
+      }
+    }
+
+    // 2. Search Filter
     const matchesSearch =
       record.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.role.toLowerCase().includes(searchTerm.toLowerCase());
 
+    // 3. Department Filter
     const matchesDept =
       departmentFilter === "All" || record.department === departmentFilter;
 
+    // 4. Status Filter
     const matchesStatus =
       statusFilter === "All" || record.status === statusFilter;
 
@@ -54,12 +77,6 @@ export function AttendanceTable() {
             Late Check-in
           </Badge>
         );
-      case "Remote":
-        return (
-          <Badge variant="info" dot>
-            Remote / WFH
-          </Badge>
-        );
       case "On Leave":
         return (
           <Badge variant="danger" dot>
@@ -78,10 +95,18 @@ export function AttendanceTable() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-orange-600" />
-              <span>Today&apos;s Attendance Logs</span>
+              <span>
+                {dateFilterMode === "today"
+                  ? "Today's Attendance Logs"
+                  : dateFilterMode === "custom"
+                  ? `Attendance Logs (${customDate})`
+                  : "All Attendance Records"}
+              </span>
             </CardTitle>
             <CardDescription>
-              Live biometric check-in tracking &amp; work hour records.
+              {dateFilterMode === "today"
+                ? "Showing today's office attendance records. Use date filter to inspect past dates."
+                : `Showing records for ${dateFilterMode === "custom" ? customDate : "all historical dates"}.`}
             </CardDescription>
           </div>
           <Link
@@ -93,44 +118,88 @@ export function AttendanceTable() {
           </Link>
         </div>
 
-        {/* Filter controls */}
-        <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-3">
-          <div className="w-full sm:flex-1">
-            <Input
-              icon={<Search className="h-3.5 w-3.5" />}
-              placeholder="Search by name, ID, or designation..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-8 text-xs"
-            />
+        {/* Date Filter & Search Controls */}
+        <div className="space-y-2.5 pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200/70">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider pl-1">
+                Date:
+              </span>
+              <button
+                type="button"
+                onClick={() => setDateFilterMode("today")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  dateFilterMode === "today"
+                    ? "bg-orange-600 text-white shadow-xs"
+                    : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+                }`}
+              >
+                Today Only
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilterMode("all")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                  dateFilterMode === "all"
+                    ? "bg-orange-600 text-white shadow-xs font-bold"
+                    : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+                }`}
+              >
+                All Dates
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-slate-500 font-medium">Pick Date:</span>
+              <input
+                type="date"
+                value={customDate}
+                onChange={(e) => {
+                  setCustomDate(e.target.value);
+                  setDateFilterMode("custom");
+                }}
+                className="h-7 text-xs bg-white border border-slate-200 rounded-lg px-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="h-8 text-xs py-0 w-36"
-            >
-              <option value="All">All Departments</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Product & Design">Product & Design</option>
-              <option value="Sales & Marketing">Sales & Marketing</option>
-              <option value="Operations">Operations</option>
-              <option value="HR & People">HR & People</option>
-              <option value="Finance & Legal">Finance & Legal</option>
-            </Select>
+          <div className="flex flex-col sm:flex-row items-center gap-2.5">
+            <div className="w-full sm:flex-1">
+              <Input
+                icon={<Search className="h-3.5 w-3.5" />}
+                placeholder="Search by name, ID, or designation..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-8 text-xs"
+              />
+            </div>
 
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8 text-xs py-0 w-32"
-            >
-              <option value="All">All Statuses</option>
-              <option value="Present">Present</option>
-              <option value="Late">Late</option>
-              <option value="Remote">Remote</option>
-              <option value="On Leave">On Leave</option>
-            </Select>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Select
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="h-8 text-xs py-0 w-36"
+              >
+                <option value="All">All Departments</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Product & Design">Product & Design</option>
+                <option value="Sales & Marketing">Sales & Marketing</option>
+                <option value="Operations">Operations</option>
+                <option value="HR & People">HR & People</option>
+                <option value="Finance & Legal">Finance & Legal</option>
+              </Select>
+
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-8 text-xs py-0 w-32"
+              >
+                <option value="All">All Statuses</option>
+                <option value="Present">Present</option>
+                <option value="Late">Late Check-in</option>
+                <option value="On Leave">On Leave</option>
+              </Select>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -139,10 +208,15 @@ export function AttendanceTable() {
         {filteredRecords.length === 0 ? (
           <div className="p-6">
             <EmptyState
-              title="No attendance records match"
-              description="Try adjusting your search terms or department filters to see today's entries."
-              actionLabel="Clear Filters"
+              title="No attendance records found"
+              description={
+                dateFilterMode === "today"
+                  ? "No employee check-ins logged for today yet. Use date filter to view historical records or check in."
+                  : "No attendance records match the selected date or filter parameters."
+              }
+              actionLabel="Reset to Today"
               onAction={() => {
+                setDateFilterMode("today");
                 setSearchTerm("");
                 setDepartmentFilter("All");
                 setStatusFilter("All");
@@ -156,7 +230,7 @@ export function AttendanceTable() {
                 <TableHead>Employee</TableHead>
                 <TableHead>Department &amp; Role</TableHead>
                 <TableHead>Check-in</TableHead>
-                <TableHead>Location &amp; GPS</TableHead>
+                <TableHead>Location &amp; Verification</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Hours Logged</TableHead>
               </TableRow>
@@ -201,7 +275,7 @@ export function AttendanceTable() {
                         type="button"
                         onClick={() => openLocationModal(record)}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-slate-700 border border-slate-200 transition-colors text-xs font-medium cursor-pointer"
-                        title="Click to view GPS Map & Geofence"
+                        title="Click to view Location Map"
                       >
                         <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" />
                         <span className="truncate max-w-[130px]">{record.location}</span>

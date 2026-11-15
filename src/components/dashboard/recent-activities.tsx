@@ -46,7 +46,7 @@ export function RecentActivities() {
       <CardContent className="p-4 flex-1">
         {activities.length === 0 ? (
           <div className="py-8 text-center text-xs text-slate-400">
-            No live audit events yet. Invite an employee or log GPS attendance to view real-time activity.
+            No live audit events yet. Invite an employee or log attendance to view real-time activity.
           </div>
         ) : (
         <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">

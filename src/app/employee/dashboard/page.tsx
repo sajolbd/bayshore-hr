@@ -169,7 +169,7 @@ export default function EmployeeDashboardPage() {
                     className="border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
                   >
                     <MapPin className="h-4 w-4 text-orange-600" />
-                    <span>View GPS Pin</span>
+                    <span>View Location Pin</span>
                   </Button>
                   <Button
                     variant="primary"
@@ -189,7 +189,7 @@ export default function EmployeeDashboardPage() {
                   className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 text-white font-bold px-6 py-3 gap-2"
                 >
                   <MapPin className="h-5 w-5" />
-                  Clock In (GPS Location)
+                  Clock In
                 </Button>
               )}
             </div>
@@ -284,9 +284,9 @@ export default function EmployeeDashboardPage() {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-            <span className="text-xs text-blue-600 font-semibold block">Remote / Approved Leaves</span>
+            <span className="text-xs text-blue-600 font-semibold block">Approved Leaves</span>
             <span className="text-2xl font-bold text-blue-700 mt-1 block">3 Days</span>
-            <span className="text-[11px] text-blue-600 mt-0.5 block">2 Remote • 1 Annual</span>
+            <span className="text-[11px] text-blue-600 mt-0.5 block">2 Casual • 1 Annual</span>
           </div>
         </div>
       </div>

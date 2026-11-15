@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       lng > 180
     ) {
       return NextResponse.json(
-        { error: "Valid GPS coordinates (latitude & longitude) are required to clock in." },
+        { error: "Valid location coordinates (latitude & longitude) are required to clock in." },
         { status: 400 }
       );
     }
@@ -71,12 +71,12 @@ export async function POST(request: NextRequest) {
         ? "Field Client Visit"
         : inOfficeGeofence
         ? "Inside Office Geofence"
-        : "Outside Geofence (Remote)";
+        : "Outside Geofence";
 
     let resolvedAddress = body.address?.trim();
     let shortLocation = body.shortLocation?.trim();
 
-    if (!resolvedAddress || resolvedAddress.startsWith("GPS (")) {
+    if (!resolvedAddress || resolvedAddress.startsWith("GPS (") || resolvedAddress.startsWith("Location (")) {
       const geoLookup = await reverseGeocodeCoordinates(lat, lng);
       resolvedAddress = geoLookup.address;
       if (!shortLocation) {
@@ -102,8 +102,6 @@ export async function POST(request: NextRequest) {
     const status =
       checkInType === "Field Check-In"
         ? "Present"
-        : !inOfficeGeofence
-        ? "Remote"
         : isLateOfficeShift
         ? "Late"
         : "Present";
@@ -154,7 +152,7 @@ export async function POST(request: NextRequest) {
       action:
         checkInType === "Field Check-In"
           ? "completed field check-in at"
-          : "clocked in with live GPS location at",
+          : "clocked in with verified office location at",
       target: `${shortLocation} (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
       type: "onboarding",
       ipAddress: clientIp,
@@ -182,7 +180,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("POST /api/attendance/clock-in error:", err);
     return NextResponse.json(
-      { error: "Failed to record GPS clock-in." },
+      { error: "Failed to record clock-in." },
       { status: 500 }
     );
   }

@@ -120,7 +120,7 @@ export function SearchModal() {
                       <span className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700">
                         <MapPin className="h-3.5 w-3.5" />
                       </span>
-                      <span>Clock In / Field Check-In (GPS)</span>
+                      <span>Clock In / Field Check-In</span>
                     </div>
                     <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-600" />
                   </button>

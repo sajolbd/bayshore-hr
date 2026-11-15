@@ -27,7 +27,7 @@ const companyDocuments = [
   },
   {
     id: "DOC-03",
-    title: "GPS Time Clock & Hybrid Work Geofencing SOP",
+    title: "Time Clock & Attendance Verification SOP",
     category: "Operations",
     updatedOn: "Nov 05, 2026",
     size: "920 KB",

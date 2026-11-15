@@ -63,7 +63,7 @@ export function AttendanceChart() {
             <span>Attendance Overview</span>
           </CardTitle>
           <CardDescription>
-            Weekly in-office, remote, late, and leave metrics.
+            Weekly in-office, on-time, late, and leave metrics.
           </CardDescription>
         </div>
         <div className="text-right">
@@ -108,12 +108,6 @@ export function AttendanceChart() {
                   fill="#EA580C"
                   radius={[4, 4, 0, 0]}
                   name="In-Office"
-                />
-                <Bar
-                  dataKey="remote"
-                  fill="#3B82F6"
-                  radius={[4, 4, 0, 0]}
-                  name="Remote"
                 />
                 <Bar
                   dataKey="late"

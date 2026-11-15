@@ -52,7 +52,7 @@ export const adminNavItems: NavItem[] = [
   { title: "Overview", href: "/", icon: LayoutDashboard },
   { title: "Employees", href: "/employees", icon: Users, badge: "248" },
   { title: "Departments", href: "/departments", icon: Building2 },
-  { title: "Attendance & GPS", href: "/attendance", icon: CalendarCheck },
+  { title: "Attendance & Time Tracking", href: "/attendance", icon: CalendarCheck },
   { title: "Leave Management", href: "/leaves", icon: CalendarOff, badge: "4" },
   { title: "Shifts & Schedules", href: "/schedules", icon: Clock },
   { title: "Payroll & Salaries", href: "/payroll", icon: CreditCard },
@@ -69,7 +69,7 @@ export const adminNavItems: NavItem[] = [
 export const employeeNavItems: NavItem[] = [
   { title: "My Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
   { title: "My Profile", href: "/employee/profile", icon: User },
-  { title: "My Attendance (GPS)", href: "/employee/attendance", icon: CalendarCheck, badge: "GPS" },
+  { title: "My Attendance", href: "/employee/attendance", icon: CalendarCheck },
   { title: "My Leave", href: "/employee/leave", icon: CalendarOff, badge: "3d" },
   { title: "My Schedule", href: "/employee/schedule", icon: Clock },
   { title: "My Salary & Payslips", href: "/employee/salary", icon: CreditCard },

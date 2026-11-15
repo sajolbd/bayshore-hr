@@ -139,14 +139,14 @@ function ShellContent({ children }: { children: React.ReactNode }) {
         onClose={() => setIsClockInModalOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col">
+      <div
+        className={cn(
+          "flex-1 flex flex-col min-w-0 transition-all duration-300",
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-64"
+        )}
+      >
         <Header />
-        <main
-          className={cn(
-            "flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto transition-all duration-300",
-            isSidebarCollapsed ? "lg:pl-24" : "lg:pl-68"
-          )}
-        >
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 xl:p-10 w-full min-w-0">
           {isAdminOnlyRoute ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-8 text-center max-w-lg mx-auto my-12 shadow-xs">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 mb-4 shadow-2xs">

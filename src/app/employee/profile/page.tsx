@@ -272,7 +272,7 @@ export default function EmployeeProfilePage() {
             </div>
 
             <div className="text-xs text-slate-500 leading-relaxed">
-              Your reporting manager approves your Annual Leave requests, GPS attendance reviews, and quarterly OKR milestones.
+              Your reporting manager approves your Annual Leave requests, attendance reviews, and quarterly OKR milestones.
             </div>
           </div>
 
@@ -289,7 +289,7 @@ export default function EmployeeProfilePage() {
               </div>
               <div className="py-2 flex justify-between">
                 <span className="text-slate-500">Work Model:</span>
-                <span className="font-semibold text-slate-800">Hybrid (3 Days Office / 2 Remote)</span>
+                <span className="font-semibold text-slate-800">100% Onsite (Gulshan HQ)</span>
               </div>
               <div className="py-2 flex justify-between">
                 <span className="text-slate-500">Probation Status:</span>

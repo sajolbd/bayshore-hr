@@ -35,7 +35,29 @@ export default function EmployeeAttendancePage() {
   const [isCorrectionOpen, setIsCorrectionOpen] = React.useState(false);
   const [filterStatus, setFilterStatus] = React.useState<string>("All");
 
+  const todayKey = React.useMemo(() => {
+    return new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Dhaka",
+    });
+  }, []);
+
+  const [dateFilterMode, setDateFilterMode] = React.useState<"today" | "custom" | "all">("today");
+  const [customDate, setCustomDate] = React.useState<string>(todayKey);
+
   const filteredPunches = punchHistory.filter((item) => {
+    // 1. Date filter (defaults to today's punches)
+    if (dateFilterMode === "today") {
+      // item.date can be "2026-11-15" or check if item matches today
+      const itemDateStr = item.date;
+      if (itemDateStr && !itemDateStr.includes(todayKey) && itemDateStr !== punchHistory[0]?.date) {
+        return false;
+      }
+    } else if (dateFilterMode === "custom") {
+      if (item.date && !item.date.includes(customDate)) {
+        return false;
+      }
+    }
+
     if (filterStatus === "All") return true;
     return item.status === filterStatus;
   });
@@ -120,7 +142,7 @@ export default function EmployeeAttendancePage() {
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
               Check-in recorded at {todayCheckInTime || "Not logged"} • Location:{" "}
-              {punchHistory[0]?.location || "Pending GPS Punch"}
+              {punchHistory[0]?.location || "Pending Punch"}
             </p>
           </div>
         </div>
@@ -135,7 +157,7 @@ export default function EmployeeAttendancePage() {
                 className="gap-1.5 text-xs text-slate-700 border-slate-200"
               >
                 <MapPin className="h-3.5 w-3.5 text-orange-600" />
-                <span>View My GPS Map</span>
+                <span>View Location Map</span>
               </Button>
               <Button
                 variant="primary"
@@ -152,7 +174,7 @@ export default function EmployeeAttendancePage() {
               className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 font-bold gap-2 shadow-sm"
             >
               <Clock className="h-4 w-4" />
-              <span>Punch In (GPS Location &amp; Geofence)</span>
+              <span>Punch In (Office Location)</span>
             </Button>
           )}
         </div>
@@ -162,14 +184,54 @@ export default function EmployeeAttendancePage() {
       <div className="rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 p-4 sm:px-6">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Attendance Log (Last 7 Working Days)</h3>
+            <h3 className="text-base font-bold text-slate-900">
+              {dateFilterMode === "today"
+                ? "Today's Attendance Punch Log"
+                : dateFilterMode === "custom"
+                ? `Attendance Punch Log (${customDate})`
+                : "Attendance Punch History"}
+            </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               Standard shift schedule: 09:30 AM to 06:30 PM (Sunday to Thursday)
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500">Filter:</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setDateFilterMode("today")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  dateFilterMode === "today"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Today Only
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilterMode("all")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  dateFilterMode === "all"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                All Dates
+              </button>
+            </div>
+
+            <input
+              type="date"
+              value={customDate}
+              onChange={(e) => {
+                setCustomDate(e.target.value);
+                setDateFilterMode("custom");
+              }}
+              className="h-7 text-xs bg-white border border-slate-200 rounded-lg px-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -177,8 +239,7 @@ export default function EmployeeAttendancePage() {
             >
               <option value="All">All Statuses</option>
               <option value="Present">Present</option>
-              <option value="Late">Late</option>
-              <option value="Remote">Remote</option>
+              <option value="Late">Late Check-in</option>
             </select>
           </div>
         </div>
@@ -186,7 +247,7 @@ export default function EmployeeAttendancePage() {
         <div className="overflow-x-auto">
           {filteredPunches.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-400">
-              No attendance logs yet. Click &ldquo;Punch In (GPS Location &amp; Geofence)&rdquo; to log your first GPS check-in.
+              No attendance logs found for this date. Click &ldquo;Punch In (Office Location)&rdquo; to log your check-in.
             </div>
           ) : (
             <table className="w-full text-left text-xs">
@@ -231,8 +292,6 @@ export default function EmployeeAttendancePage() {
                           ? "success"
                           : item.status === "Late"
                           ? "warning"
-                          : item.status === "Remote"
-                          ? "info"
                           : "neutral"
                       }
                       className="text-[10px]"

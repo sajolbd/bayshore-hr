@@ -44,7 +44,7 @@ function getAdminNotificationMeta(activity: ActivityItem): {
 } {
   const lowerAction = activity.action.toLowerCase();
   if (lowerAction.includes("clocked")) {
-    return { title: "GPS Attendance Event", route: "/attendance" };
+    return { title: "Attendance Event", route: "/attendance" };
   }
   if (lowerAction.includes("e-claim")) {
     return { title: "e-Claim Voucher Submitted", route: "/claims" };
@@ -90,7 +90,6 @@ export function Header() {
   const router = useRouter();
   const {
     activities,
-    isSidebarCollapsed,
     setIsMobileNavOpen,
     setIsAddEmployeeOpen,
     setIsExportModalOpen,
@@ -164,7 +163,7 @@ export function Header() {
       case "/departments":
         return "Departments & Teams";
       case "/attendance":
-        return "Daily Attendance & GPS";
+        return "Daily Attendance";
       case "/leaves":
         return "Annual Leave & Quotas";
       case "/schedules":
@@ -192,7 +191,7 @@ export function Header() {
       case "/employee/profile":
         return "My Profile";
       case "/employee/attendance":
-        return "My Attendance & GPS Logs";
+        return "My Attendance Logs";
       case "/employee/leave":
         return "My Annual Leave";
       case "/employee/schedule":
@@ -223,12 +222,7 @@ export function Header() {
   const activeUnreadCount = isEmployeeView ? empUnreadCount : adminUnreadCount;
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md transition-all duration-300",
-        isSidebarCollapsed ? "lg:pl-24" : "lg:pl-68"
-      )}
-    >
+    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 lg:px-8 backdrop-blur-md transition-all duration-300">
       {/* Left side: Mobile Menu + Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
         <button
@@ -272,7 +266,7 @@ export function Header() {
             className="hidden sm:inline-flex gap-1.5 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs"
           >
             <MapPin className="h-3.5 w-3.5" />
-            <span>Clock In (GPS)</span>
+            <span>Clock In</span>
           </Button>
         )}
 
@@ -320,7 +314,7 @@ export function Header() {
               <>
                 <DropdownMenuItem onClick={() => setIsClockInModalOpen(true)}>
                   <MapPin className="h-4 w-4 text-emerald-600" />
-                  <span>GPS Clock In / Field Check-In</span>
+                  <span>Clock In / Office Check-In</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/employee/leave")}>
                   <CalendarOff className="h-4 w-4 text-orange-600" />
@@ -479,7 +473,7 @@ export function Header() {
               >
                 {isEmployeeView
                   ? "View all notifications"
-                  : "View live attendance & GPS logs"}
+                  : "View live attendance logs"}
               </button>
             </div>
           </DropdownMenuContent>
