@@ -24,33 +24,124 @@ export interface InviteEmailResult {
   message: string;
 }
 
+export type MailDeliveryMode = "relay" | "direct";
+
 export interface ResolvedSmtpConfig {
   source: "database" | "env";
+  deliveryMode: MailDeliveryMode;
   host: string;
   port: number;
   secure: boolean;
   user: string;
   pass: string;
+  senderEmail: string;
   fromName: string;
 }
 
+export interface EnvSmtpConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass: string;
+}
+
+function sanitizeHeaderValue(input?: string | null): string {
+  return (input || "").replace(/[\r\n"<>]+/g, " ").trim();
+}
+
+function sanitizeEmailAddress(input?: string | null): string {
+  const cleaned = (input || "").replace(/[\r\n\s<>]+/g, "").trim();
+  return cleaned.includes("@") ? cleaned : "";
+}
+
+/**
+ * Builds RFC-compliant `from` and `replyTo` headers so SMTP authentication stays intact
+ * while custom sender addresses work seamlessly in System Relay mode without an App Password.
+ */
+export function buildSenderHeaders(params: {
+  authUser: string;
+  senderEmail?: string | null;
+  fromName?: string | null;
+}) {
+  const cleanAuth = sanitizeEmailAddress(params.authUser) || params.authUser.trim();
+  const effectiveSender = sanitizeEmailAddress(params.senderEmail) || cleanAuth;
+  const cleanName = sanitizeHeaderValue(params.fromName) || "Bayshore HR";
+  const isRelay = effectiveSender.toLowerCase() !== cleanAuth.toLowerCase();
+
+  return {
+    isRelay,
+    effectiveSender,
+    from: isRelay
+      ? `"${cleanName} (${effectiveSender})" <${cleanAuth}>`
+      : `"${cleanName}" <${cleanAuth}>`,
+    replyTo: effectiveSender,
+  };
+}
+
+export function getEnvSmtpConfig(): EnvSmtpConfig | null {
+  const envUser = sanitizeEmailAddress(process.env.SMTP_USER);
+  const envPass = process.env.SMTP_PASS?.replace(/\s+/g, "").trim();
+  if (!envUser || !envPass) return null;
+  return {
+    host: process.env.SMTP_HOST?.trim() || "smtp.gmail.com",
+    port: parseInt(process.env.SMTP_PORT || "587", 10),
+    secure: process.env.SMTP_SECURE === "true",
+    user: envUser,
+    pass: envPass,
+  };
+}
+
 export async function resolveSmtpConfig(): Promise<ResolvedSmtpConfig | null> {
+  const envCfg = getEnvSmtpConfig();
+
   try {
     await connectToDatabase();
     const doc = await MailSettingsModel.findOne({ key: "primary" })
       .select("+smtpPassEncrypted")
       .lean();
 
-    if (doc && doc.smtpUser && doc.smtpPassEncrypted) {
-      const decryptedPass = decryptSecret(doc.smtpPassEncrypted).replace(/\s+/g, "");
-      if (decryptedPass) {
+    if (doc) {
+      const desiredSender =
+        sanitizeEmailAddress(doc.senderEmail) ||
+        sanitizeEmailAddress(doc.smtpUser) ||
+        envCfg?.user ||
+        "";
+
+      if (doc.smtpUser && doc.smtpPassEncrypted) {
+        const decryptedPass = decryptSecret(doc.smtpPassEncrypted).replace(/\s+/g, "");
+        if (decryptedPass) {
+          const authUser = sanitizeEmailAddress(doc.smtpUser) || doc.smtpUser.trim();
+          const senderEmail = desiredSender || authUser;
+          const isRelay =
+            doc.deliveryMode === "relay" ||
+            senderEmail.toLowerCase() !== authUser.toLowerCase();
+          return {
+            source: "database",
+            deliveryMode: isRelay ? "relay" : "direct",
+            host: doc.smtpHost || "smtp.gmail.com",
+            port: doc.smtpPort || 587,
+            secure: Boolean(doc.smtpSecure),
+            user: authUser,
+            pass: decryptedPass,
+            senderEmail,
+            fromName: doc.fromName?.trim() || "Bayshore HR",
+          };
+        }
+      }
+
+      if (envCfg) {
+        const senderEmail = desiredSender || envCfg.user;
         return {
           source: "database",
-          host: doc.smtpHost || "smtp.gmail.com",
-          port: doc.smtpPort || 587,
-          secure: Boolean(doc.smtpSecure),
-          user: doc.smtpUser.trim(),
-          pass: decryptedPass,
+          deliveryMode:
+            senderEmail.toLowerCase() === envCfg.user.toLowerCase() ? "direct" : "relay",
+          host: doc.smtpHost || envCfg.host,
+          port: doc.smtpPort || envCfg.port,
+          secure: doc.smtpHost ? Boolean(doc.smtpSecure) : envCfg.secure,
+          user: envCfg.user,
+          pass: envCfg.pass,
+          senderEmail,
           fromName: doc.fromName?.trim() || "Bayshore HR",
         };
       }
@@ -59,16 +150,16 @@ export async function resolveSmtpConfig(): Promise<ResolvedSmtpConfig | null> {
     // Fallback to environment variables cleanly
   }
 
-  const envUser = process.env.SMTP_USER?.trim();
-  const envPass = process.env.SMTP_PASS?.replace(/\s+/g, "").trim();
-  if (envUser && envPass) {
+  if (envCfg) {
     return {
       source: "env",
-      host: process.env.SMTP_HOST?.trim() || "smtp.gmail.com",
-      port: parseInt(process.env.SMTP_PORT || "587", 10),
-      secure: process.env.SMTP_SECURE === "true",
-      user: envUser,
-      pass: envPass,
+      deliveryMode: "relay",
+      host: envCfg.host,
+      port: envCfg.port,
+      secure: envCfg.secure,
+      user: envCfg.user,
+      pass: envCfg.pass,
+      senderEmail: envCfg.user,
       fromName: "Bayshore HR",
     };
   }
@@ -149,6 +240,7 @@ export async function verifyAndTestSmtp(params: {
   user: string;
   pass: string;
   fromName: string;
+  senderEmail?: string;
   testRecipient?: string;
 }): Promise<void> {
   const cleanPass = params.pass.replace(/\s+/g, "").trim();
@@ -162,14 +254,21 @@ export async function verifyAndTestSmtp(params: {
   await transporter.verify();
 
   if (params.testRecipient) {
+    const headers = buildSenderHeaders({
+      authUser: params.user,
+      senderEmail: params.senderEmail || params.user,
+      fromName: params.fromName,
+    });
     await transporter.sendMail({
-      from: `"${params.fromName}" <${params.user.trim()}>`,
+      from: headers.from,
+      replyTo: headers.replyTo,
       to: params.testRecipient.trim(),
-      subject: "Bayshore HR — Gmail SMTP Connection Verified",
-      text: "Your Bayshore HR SMTP configuration is connected and ready to deliver employee invitation emails.",
+      subject: "Bayshore HR — Email Delivery Connected",
+      text: `Your Bayshore HR mailer is connected. Active Sender / Reply-To: ${headers.effectiveSender} (Mode: ${headers.isRelay ? "System Relay" : "Direct SMTP"}).`,
       html: `<div style="font-family: Inter, sans-serif; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-        <h2 style="color: #ea580c; margin-top: 0;">Bayshore HR SMTP Connected</h2>
-        <p style="color: #334155;">Employee invitation emails from <strong>Bayshore Communication</strong> will now be delivered directly to employee inboxes.</p>
+        <h2 style="color: #ea580c; margin-top: 0;">Bayshore HR Email Delivery Connected</h2>
+        <p style="color: #334155;">Employee invitation emails from <strong>Bayshore Communication</strong> are ready to deliver directly to employee inboxes.</p>
+        <p style="color: #475569; font-size: 13px;"><strong>Active Sender / Reply-To:</strong> ${escapeHtml(headers.effectiveSender)}</p>
       </div>`,
     });
   }
@@ -179,9 +278,15 @@ export async function sendEmployeeInviteEmail(
   payload: InviteEmailPayload
 ): Promise<InviteEmailResult> {
   const smtp = await resolveSmtpConfig();
+  const effectiveSenderEmail =
+    smtp?.senderEmail || payload.adminEmail || smtp?.user || "";
+  const effectivePayload: InviteEmailPayload = {
+    ...payload,
+    adminEmail: effectiveSenderEmail,
+  };
   const subject = `Bayshore HR Invitation — Activate Your Employee Account (${payload.employeeId})`;
-  const html = buildInviteHtml(payload);
-  const text = buildInviteText(payload);
+  const html = buildInviteHtml(effectivePayload);
+  const text = buildInviteText(effectivePayload);
 
   if (smtp) {
     try {
@@ -192,14 +297,15 @@ export async function sendEmployeeInviteEmail(
         auth: { user: smtp.user, pass: smtp.pass },
       });
 
-      const cleanAdminName = (payload.adminName || "").replace(/[\r\n]/g, " ").trim();
-      const senderName = cleanAdminName || smtp.fromName || "Bayshore HR Super Admin";
-      const fromHeader = `"${senderName}" <${smtp.user}>`;
-      const replyTo = payload.adminEmail || smtp.user;
+      const headers = buildSenderHeaders({
+        authUser: smtp.user,
+        senderEmail: effectiveSenderEmail,
+        fromName: smtp.fromName || payload.adminName || "Bayshore HR",
+      });
 
       await transporter.sendMail({
-        from: fromHeader,
-        replyTo,
+        from: headers.from,
+        replyTo: headers.replyTo,
         to: payload.to,
         subject,
         text,
@@ -210,7 +316,7 @@ export async function sendEmployeeInviteEmail(
         delivered: true,
         mode: "smtp",
         inviteUrl: payload.inviteUrl,
-        message: `Invitation email sent directly to ${payload.to}.`,
+        message: `Invitation email sent to ${payload.to} (Sender / Reply-To: ${headers.effectiveSender}).`,
       };
     } catch (err) {
       const errorMsg =
@@ -219,7 +325,7 @@ export async function sendEmployeeInviteEmail(
         delivered: false,
         mode: "direct-link",
         inviteUrl: payload.inviteUrl,
-        message: `Employee saved, but email to ${payload.to} failed (${errorMsg}). Check Gmail App Password in Settings -> Email & Gmail SMTP, or share the activation link below.`,
+        message: `Employee saved, but email to ${payload.to} failed (${errorMsg}). Check Email Delivery in Settings, or share the activation link below.`,
       };
     }
   }

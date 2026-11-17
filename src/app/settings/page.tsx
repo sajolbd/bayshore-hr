@@ -26,6 +26,8 @@ import {
   Eye,
   EyeOff,
   Camera,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -80,14 +82,17 @@ export default function SettingsPage() {
     }
   };
 
-  // Gmail / SMTP Configuration state
+  // Gmail / SMTP Delivery Configuration state
   const [smtpConfigured, setSmtpConfigured] = React.useState(false);
+  const [deliveryMode, setDeliveryMode] = React.useState<"relay" | "direct">("relay");
+  const [relayAvailable, setRelayAvailable] = React.useState(false);
+  const [relayEmail, setRelayEmail] = React.useState("");
   const [smtpHost, setSmtpHost] = React.useState("smtp.gmail.com");
   const [smtpPort, setSmtpPort] = React.useState("587");
   const [smtpUser, setSmtpUser] = React.useState("");
   const [smtpPass, setSmtpPass] = React.useState("");
   const [hasSavedPass, setHasSavedPass] = React.useState(false);
-  const [isEditingPass, setIsEditingPass] = React.useState(false);
+  const [showCustomAuth, setShowCustomAuth] = React.useState(false);
   const [showPass, setShowPass] = React.useState(false);
   const [fromName, setFromName] = React.useState("Bayshore HR");
   const [testRecipient, setTestRecipient] = React.useState("");
@@ -106,23 +111,34 @@ export default function SettingsPage() {
         (
           data: {
             configured?: boolean;
+            deliveryMode?: "relay" | "direct";
+            relayAvailable?: boolean;
+            relayEmail?: string;
             settings?: {
               smtpHost: string;
               smtpPort: number;
               smtpUser: string;
+              senderEmail?: string;
               fromName: string;
               hasPassword: boolean;
+              deliveryMode?: "relay" | "direct";
             };
           } | null
         ) => {
           if (!data || cancelled) return;
           setSmtpConfigured(Boolean(data.configured));
+          setDeliveryMode(data.deliveryMode || data.settings?.deliveryMode || "relay");
+          setRelayAvailable(Boolean(data.relayAvailable));
+          setRelayEmail(data.relayEmail || "");
           if (data.settings) {
             setSmtpHost(data.settings.smtpHost || "smtp.gmail.com");
             setSmtpPort(String(data.settings.smtpPort || 587));
-            setSmtpUser(data.settings.smtpUser || "");
+            setSmtpUser(data.settings.senderEmail || data.settings.smtpUser || "");
             setFromName(data.settings.fromName || "Bayshore HR");
             setHasSavedPass(Boolean(data.settings.hasPassword));
+            if (!data.relayAvailable && !data.settings.hasPassword) {
+              setShowCustomAuth(true);
+            }
           }
         }
       )
@@ -153,6 +169,7 @@ export default function SettingsPage() {
     setIsSavingSmtp(true);
 
     try {
+      const customPass = showCustomAuth ? smtpPass.trim() : "";
       const res = await fetch("/api/settings/email", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -161,13 +178,16 @@ export default function SettingsPage() {
           smtpPort: Number(smtpPort) || 587,
           smtpSecure: Number(smtpPort) === 465,
           smtpUser,
-          smtpPass: isEditingPass || !hasSavedPass ? smtpPass : "",
+          senderEmail: smtpUser,
+          smtpPass: customPass,
           fromName,
           testRecipient: testRecipient.trim() || undefined,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
+        deliveryMode?: "relay" | "direct";
+        relayEmail?: string;
         message?: string;
         error?: string;
       };
@@ -175,31 +195,37 @@ export default function SettingsPage() {
       if (!res.ok || !data.ok) {
         setSmtpFeedback({
           ok: false,
-          message: data.error || "Could not verify Gmail SMTP connection.",
+          message: data.error || "Could not verify email delivery settings.",
         });
         setIsSavingSmtp(false);
         return;
       }
 
       setSmtpConfigured(true);
+      setRelayAvailable(true);
       setHasSavedPass(true);
-      setIsEditingPass(false);
+      if (data.deliveryMode) {
+        setDeliveryMode(data.deliveryMode);
+      }
+      if (data.relayEmail) {
+        setRelayEmail(data.relayEmail);
+      }
       setShowPass(false);
       setSmtpPass("");
       setSmtpFeedback({
         ok: true,
         message:
-          data.message || "Gmail SMTP verified and saved! Real emails will now deliver.",
+          data.message || "Email sender saved! Invitation emails will now deliver directly.",
       });
       showToast(
-        "Gmail SMTP Connected",
-        data.message || "Employee invite emails will now deliver directly to Gmail.",
+        "Email Delivery Updated",
+        data.message || "Employee invite emails will use your saved sender address.",
         "success"
       );
     } catch {
       setSmtpFeedback({
         ok: false,
-        message: "Network error while saving SMTP settings.",
+        message: "Network error while saving email settings.",
       });
     } finally {
       setIsSavingSmtp(false);
@@ -217,7 +243,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* Gmail / SMTP Delivery Configuration (Super Admin Only) */}
+      {/* Email Delivery & Sender Configuration (Super Admin Only) */}
       {isSuperAdmin && (
         <Card className="p-6 space-y-4 border-orange-200/80">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
@@ -227,10 +253,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-slate-900">
-                  Gmail &amp; SMTP Email Delivery (Employee Invites)
+                  Email Delivery &amp; Sender Address (Employee Invites)
                 </h2>
                 <p className="text-[11px] text-slate-500">
-                  Required so adding an employee sends a real activation link directly to their Gmail inbox.
+                  Enter any email address to display as the sender &amp; Reply-To when sending activation links.
                 </p>
               </div>
             </div>
@@ -238,25 +264,37 @@ export default function SettingsPage() {
               variant={smtpConfigured ? "success" : "warning"}
               className="text-[11px] shrink-0"
             >
-              {smtpConfigured ? "Connected (Real Inbox Ready)" : "Action Required: Not Connected"}
+              {smtpConfigured
+                ? deliveryMode === "relay"
+                  ? "Password-Free Relay Active"
+                  : "Connected (Direct SMTP)"
+                : "Action Required: Not Connected"}
             </Badge>
           </div>
 
-          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 text-[11px] text-slate-600 space-y-1">
-            <p className="font-bold text-slate-800">
-              How to connect Gmail in 30 seconds:
-            </p>
-            <p>
-              1. Open your Google Account → <strong>Security</strong> → Turn ON{" "}
-              <strong>2-Step Verification</strong>.
-            </p>
-            <p>
-              2. Search <strong>&ldquo;App passwords&rdquo;</strong> (myaccount.google.com/apppasswords) → Create app named <strong>Bayshore HR</strong> → copy the 16-character code.
-            </p>
-            <p>
-              3. Enter your Gmail address + that 16-character App Password below and click <strong>Verify &amp; Save Gmail SMTP</strong>.
-            </p>
-          </div>
+          {relayAvailable || hasSavedPass ? (
+            <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/80 p-3.5 text-[11px] text-emerald-900 space-y-1">
+              <p className="font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                <span>No 16-Digit App Password Required (System Relay Active)</span>
+              </p>
+              <p className="text-emerald-800/90">
+                Type any email address below (e.g. <strong>sajolibn@gmail.com</strong>) and click{" "}
+                <strong>Save Sender Email</strong>. Invites send automatically via the server mail relay
+                {relayEmail ? ` (${relayEmail})` : ""} with your entered email shown in{" "}
+                <strong>Sender Name &amp; Reply-To</strong>.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 text-[11px] text-slate-600 space-y-1">
+              <p className="font-bold text-slate-800">
+                One-time Base Relay Setup:
+              </p>
+              <p>
+                No server SMTP relay is configured yet. Enter one base Gmail + its 16-digit Google App Password once below (or set <code>SMTP_USER</code> &amp; <code>SMTP_PASS</code> on Vercel) — after that, any email address works without a password.
+              </p>
+            </div>
+          )}
 
           {smtpFeedback && (
             <div
@@ -278,109 +316,101 @@ export default function SettingsPage() {
           <form onSubmit={handleSaveSmtp} autoComplete="off" className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Sender Gmail / SMTP Email *"
+                label="Sender Email Address *"
                 type="email"
                 name="bayshore-smtp-sender"
                 autoComplete="off"
                 icon={<Mail className="h-4 w-4" />}
-                placeholder="shamim.bayshore@gmail.com"
+                placeholder="sajolibn@gmail.com"
                 value={smtpUser}
                 onChange={(e) => setSmtpUser(e.target.value)}
                 required
               />
-              {hasSavedPass && !isEditingPass ? (
-                <div className="w-full space-y-1.5">
-                  <span className="block text-xs font-semibold text-slate-700">
-                    Google 16-Digit App Password
-                  </span>
-                  <div className="flex h-9 items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 text-xs">
-                    <span className="inline-flex items-center gap-1.5 font-medium text-emerald-800">
-                      <Lock className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>Verified &amp; Encrypted in DB</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditingPass(true);
-                        setSmtpPass("");
-                      }}
-                      className="font-semibold text-orange-600 hover:text-orange-700 hover:underline"
-                    >
-                      Change
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="bayshore-gmail-app-pass"
-                      className="block text-xs font-semibold text-slate-700"
-                    >
-                      Google 16-Digit App Password *
-                    </label>
-                    {hasSavedPass && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsEditingPass(false);
-                          setSmtpPass("");
-                          setShowPass(false);
-                        }}
-                        className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 hover:underline"
-                      >
-                        Keep saved
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative flex items-center">
-                    <Input
-                      id="bayshore-gmail-app-pass"
-                      name="bayshore-gmail-app-password"
-                      autoComplete="new-password"
-                      data-lpignore="true"
-                      type={showPass ? "text" : "password"}
-                      icon={<Lock className="h-4 w-4" />}
-                      className="pr-9"
-                      placeholder="abcd efgh ijkl mnop"
-                      value={smtpPass}
-                      onChange={(e) => setSmtpPass(e.target.value)}
-                      required={!hasSavedPass || isEditingPass}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPass((prev) => !prev)}
-                      aria-label={showPass ? "Hide App Password" : "Show App Password"}
-                      className="absolute right-2.5 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPass ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Input
-                label="SMTP Host"
-                value={smtpHost}
-                onChange={(e) => setSmtpHost(e.target.value)}
-              />
-              <Input
-                label="SMTP Port (587 TLS / 465 SSL)"
-                type="number"
-                value={smtpPort}
-                onChange={(e) => setSmtpPort(e.target.value)}
-              />
               <Input
                 label="Sender Display Name"
                 value={fromName}
+                placeholder="Bayshore HR"
                 onChange={(e) => setFromName(e.target.value)}
               />
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomAuth((prev) => {
+                    if (prev) {
+                      setSmtpPass("");
+                      setShowPass(false);
+                    }
+                    return !prev;
+                  });
+                }}
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 hover:text-orange-600 transition-colors"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                <span>Optional: Authenticate Custom SMTP / 16-Digit App Password</span>
+                {showCustomAuth ? (
+                  <ChevronUp className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
+              </button>
+
+              {showCustomAuth && (
+                <div className="mt-3 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <p className="text-[11px] text-slate-500">
+                    Leave password blank to keep using System Relay without any App Password.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="w-full space-y-1.5">
+                      <label
+                        htmlFor="bayshore-gmail-app-pass"
+                        className="block text-xs font-semibold text-slate-700"
+                      >
+                        16-Digit App Password (Optional)
+                      </label>
+                      <div className="relative flex items-center">
+                        <Input
+                          id="bayshore-gmail-app-pass"
+                          name="bayshore-gmail-app-password"
+                          autoComplete="new-password"
+                          data-lpignore="true"
+                          type={showPass ? "text" : "password"}
+                          icon={<Lock className="h-4 w-4" />}
+                          className="pr-9"
+                          placeholder="Leave empty for System Relay"
+                          value={smtpPass}
+                          onChange={(e) => setSmtpPass(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPass((prev) => !prev)}
+                          aria-label={showPass ? "Hide App Password" : "Show App Password"}
+                          className="absolute right-2.5 text-slate-400 hover:text-slate-600"
+                        >
+                          {showPass ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <Input
+                      label="SMTP Host"
+                      value={smtpHost}
+                      onChange={(e) => setSmtpHost(e.target.value)}
+                    />
+                    <Input
+                      label="SMTP Port (587 TLS / 465 SSL)"
+                      type="number"
+                      value={smtpPort}
+                      onChange={(e) => setSmtpPort(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
@@ -401,12 +431,14 @@ export default function SettingsPage() {
                   {isSavingSmtp ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Verifying SMTP...</span>
+                      <span>Verifying &amp; Saving...</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="h-4 w-4" />
-                      <span>Verify &amp; Save Gmail SMTP</span>
+                      <span>
+                        {testRecipient.trim() ? "Send Test Email & Save" : "Save Sender Email"}
+                      </span>
                     </>
                   )}
                 </Button>
