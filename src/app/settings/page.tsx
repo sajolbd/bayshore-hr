@@ -82,11 +82,9 @@ export default function SettingsPage() {
     }
   };
 
-  // Gmail / SMTP Delivery Configuration state
+  // Email Delivery Configuration state
   const [smtpConfigured, setSmtpConfigured] = React.useState(false);
-  const [deliveryMode, setDeliveryMode] = React.useState<"relay" | "direct">("relay");
   const [relayAvailable, setRelayAvailable] = React.useState(false);
-  const [relayEmail, setRelayEmail] = React.useState("");
   const [smtpHost, setSmtpHost] = React.useState("smtp.gmail.com");
   const [smtpPort, setSmtpPort] = React.useState("587");
   const [smtpUser, setSmtpUser] = React.useState("");
@@ -111,9 +109,7 @@ export default function SettingsPage() {
         (
           data: {
             configured?: boolean;
-            deliveryMode?: "relay" | "direct";
             relayAvailable?: boolean;
-            relayEmail?: string;
             settings?: {
               smtpHost: string;
               smtpPort: number;
@@ -121,15 +117,12 @@ export default function SettingsPage() {
               senderEmail?: string;
               fromName: string;
               hasPassword: boolean;
-              deliveryMode?: "relay" | "direct";
             };
           } | null
         ) => {
           if (!data || cancelled) return;
           setSmtpConfigured(Boolean(data.configured));
-          setDeliveryMode(data.deliveryMode || data.settings?.deliveryMode || "relay");
           setRelayAvailable(Boolean(data.relayAvailable));
-          setRelayEmail(data.relayEmail || "");
           if (data.settings) {
             setSmtpHost(data.settings.smtpHost || "smtp.gmail.com");
             setSmtpPort(String(data.settings.smtpPort || 587));
@@ -186,8 +179,6 @@ export default function SettingsPage() {
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
-        deliveryMode?: "relay" | "direct";
-        relayEmail?: string;
         message?: string;
         error?: string;
       };
@@ -204,12 +195,6 @@ export default function SettingsPage() {
       setSmtpConfigured(true);
       setRelayAvailable(true);
       setHasSavedPass(true);
-      if (data.deliveryMode) {
-        setDeliveryMode(data.deliveryMode);
-      }
-      if (data.relayEmail) {
-        setRelayEmail(data.relayEmail);
-      }
       setShowPass(false);
       setSmtpPass("");
       setSmtpFeedback({
@@ -264,34 +249,17 @@ export default function SettingsPage() {
               variant={smtpConfigured ? "success" : "warning"}
               className="text-[11px] shrink-0"
             >
-              {smtpConfigured
-                ? deliveryMode === "relay"
-                  ? "Password-Free Relay Active"
-                  : "Connected (Direct SMTP)"
-                : "Action Required: Not Connected"}
+              {smtpConfigured ? "Connected" : "Action Required: Not Connected"}
             </Badge>
           </div>
 
-          {relayAvailable || hasSavedPass ? (
-            <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/80 p-3.5 text-[11px] text-emerald-900 space-y-1">
-              <p className="font-bold flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span>No 16-Digit App Password Required (System Relay Active)</span>
-              </p>
-              <p className="text-emerald-800/90">
-                Type any email address below (e.g. <strong>sajolibn@gmail.com</strong>) and click{" "}
-                <strong>Save Sender Email</strong>. Invites send automatically via the server mail relay
-                {relayEmail ? ` (${relayEmail})` : ""} with your entered email shown in{" "}
-                <strong>Sender Name &amp; Reply-To</strong>.
-              </p>
-            </div>
-          ) : (
+          {!relayAvailable && !hasSavedPass && (
             <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 text-[11px] text-slate-600 space-y-1">
               <p className="font-bold text-slate-800">
-                One-time Base Relay Setup:
+                One-time Base Mailer Setup:
               </p>
               <p>
-                No server SMTP relay is configured yet. Enter one base Gmail + its 16-digit Google App Password once below (or set <code>SMTP_USER</code> &amp; <code>SMTP_PASS</code> on Vercel) — after that, any email address works without a password.
+                No server mail credentials are configured yet. Enter one base Gmail + its 16-digit Google App Password once below (or set <code>SMTP_USER</code> &amp; <code>SMTP_PASS</code> on Vercel) — after that, any email address works without a password.
               </p>
             </div>
           )}

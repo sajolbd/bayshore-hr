@@ -56,7 +56,6 @@ export async function GET() {
       source: resolved?.source || "none",
       deliveryMode: resolved?.deliveryMode || (relayAvailable ? "relay" : "direct"),
       relayAvailable,
-      relayEmail: resolved?.user || envCfg?.user || doc?.smtpUser || "",
       settings: {
         smtpHost: doc?.smtpHost || resolved?.host || envCfg?.host || "smtp.gmail.com",
         smtpPort: doc?.smtpPort || resolved?.port || envCfg?.port || 587,
@@ -288,13 +287,12 @@ export async function PUT(request: NextRequest) {
 
     const modeSummary =
       deliveryMode === "relay"
-        ? `No 16-digit password needed! Invite emails will deliver via System Relay with Sender & Reply-To set to ${senderInput}.`
+        ? `Sender email saved (${senderInput})! Invites will deliver with Sender & Reply-To set to ${senderInput}.`
         : `Sender email saved (${senderInput}) and verified!`;
 
     return NextResponse.json({
       ok: true,
       deliveryMode,
-      relayEmail: winner.user,
       message: testRecipient
         ? `Test email sent to ${testRecipient}! ${modeSummary}`
         : modeSummary,
