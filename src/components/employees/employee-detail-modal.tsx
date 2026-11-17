@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { useHRMS } from "@/context/hrms-context";
 import { formatCurrency } from "@/lib/utils";
-import { formatTime12h } from "@/lib/office-time";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  formatTime12h,
+} from "@/lib/office-time";
 import {
   Mail,
   Phone,
@@ -218,6 +222,21 @@ export function EmployeeDetailModal() {
                 <span className="font-medium text-slate-800 flex items-center gap-1">
                   <Calendar className="h-3 w-3 text-slate-400" />
                   {selectedEmployee.joinDate}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  Assigned Office Time
+                </span>
+                <span className="font-semibold text-orange-700 flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-orange-600" />
+                  {formatTime12h(
+                    selectedEmployee.officeInTime || DEFAULT_OFFICE_IN_TIME
+                  )}{" "}
+                  –{" "}
+                  {formatTime12h(
+                    selectedEmployee.officeOutTime || DEFAULT_OFFICE_OUT_TIME
+                  )}
                 </span>
               </div>
             </div>

@@ -145,10 +145,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const effectiveScheduledIn = safeRec.scheduledInTime || scheduledInTime;
-    const effectiveScheduledOut = safeRec.scheduledOutTime || scheduledOutTime;
-    const lateEval = evaluateClockInLate(safeRec.checkIn, effectiveScheduledIn);
-
     await ActivityLogModel.create({
       user: session.name,
       avatar: session.avatar,
@@ -158,6 +154,19 @@ export async function POST(request: NextRequest) {
       ipAddress: clientIp,
       location: safeRec.location || "Gulshan HQ",
     });
+
+    const recScheduledIn = normalizeTime24h(
+      safeRec.scheduledInTime || scheduledInTime,
+      DEFAULT_OFFICE_IN_TIME
+    );
+    const recScheduledOut = normalizeTime24h(
+      safeRec.scheduledOutTime || scheduledOutTime,
+      DEFAULT_OFFICE_OUT_TIME
+    );
+    const lateEval = evaluateClockInLate(safeRec.checkIn, recScheduledIn);
+    const isLeave =
+      safeRec.status === "On Leave" || safeRec.status === "Absent";
+    const isLate = !isLeave && (lateEval.isLate || safeRec.status === "Late");
 
     return NextResponse.json({
       record: {
@@ -179,10 +188,10 @@ export async function POST(request: NextRequest) {
         checkOutAt: safeRec.checkOutAt
           ? new Date(safeRec.checkOutAt).toISOString()
           : now.toISOString(),
-        scheduledInTime: effectiveScheduledIn,
-        scheduledOutTime: effectiveScheduledOut,
-        isLate: lateEval.isLate,
-        lateMinutes: lateEval.lateMinutes,
+        scheduledInTime: recScheduledIn,
+        scheduledOutTime: recScheduledOut,
+        isLate,
+        lateMinutes: isLate ? lateEval.lateMinutes : 0,
         workHours: safeRec.workHours || workHours,
         status: safeRec.status,
         location: safeRec.location,
