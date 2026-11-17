@@ -27,6 +27,8 @@ export interface IUser {
   location: string;
   joinDate: string;
   salary: number;
+  officeInTime?: string;
+  officeOutTime?: string;
   avatar: string;
   status: UserStatusType;
   inviteTokenHash?: string | null;
@@ -82,6 +84,8 @@ const UserSchema = new Schema<IUser>(
     location: { type: String, default: "Gulshan HQ, Dhaka" },
     joinDate: { type: String, default: () => new Date().toISOString().slice(0, 10) },
     salary: { type: Number, default: 60000 },
+    officeInTime: { type: String, default: "09:00" },
+    officeOutTime: { type: String, default: "18:00" },
     avatar: {
       type: String,
       default:

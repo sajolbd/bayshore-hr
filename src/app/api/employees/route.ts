@@ -12,6 +12,12 @@ import { ActivityLogModel } from "@/models/ActivityLog";
 import { sendEmployeeInviteEmail } from "@/lib/mailer";
 import { getClientIp } from "@/lib/geo";
 import { getDefaultCartoonAvatar } from "@/lib/avatar";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  formatTime12h,
+  normalizeTime24h,
+} from "@/lib/office-time";
 
 function mapUserToEmployeeDto(doc: {
   employeeId: string;
@@ -25,6 +31,8 @@ function mapUserToEmployeeDto(doc: {
   phone: string;
   location: string;
   salary: number;
+  officeInTime?: string;
+  officeOutTime?: string;
   role: string;
   inviteSentAt?: Date | null;
 }) {
@@ -41,6 +49,8 @@ function mapUserToEmployeeDto(doc: {
     phone: doc.phone,
     location: doc.location,
     salary: doc.salary,
+    officeInTime: normalizeTime24h(doc.officeInTime, DEFAULT_OFFICE_IN_TIME),
+    officeOutTime: normalizeTime24h(doc.officeOutTime, DEFAULT_OFFICE_OUT_TIME),
     inviteSentAt: doc.inviteSentAt ? doc.inviteSentAt.toISOString() : undefined,
   };
 }
@@ -105,6 +115,8 @@ export async function POST(request: NextRequest) {
       salary?: number | string;
       location?: string;
       joinDate?: string;
+      officeInTime?: string;
+      officeOutTime?: string;
       avatar?: string;
     };
 
@@ -117,6 +129,14 @@ export async function POST(request: NextRequest) {
     const location = body.location?.trim() || "Gulshan HQ, Dhaka";
     const joinDate =
       body.joinDate?.trim() || new Date().toISOString().slice(0, 10);
+    const officeInTime = normalizeTime24h(
+      body.officeInTime,
+      DEFAULT_OFFICE_IN_TIME
+    );
+    const officeOutTime = normalizeTime24h(
+      body.officeOutTime,
+      DEFAULT_OFFICE_OUT_TIME
+    );
 
     if (!name || !email || !designation) {
       return NextResponse.json(
@@ -161,6 +181,8 @@ export async function POST(request: NextRequest) {
       location,
       joinDate,
       salary,
+      officeInTime,
+      officeOutTime,
       avatar,
       status: "Invited",
       inviteTokenHash: tokenHash,
@@ -171,6 +193,7 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = getAppBaseUrl(request);
     const inviteUrl = `${baseUrl}/accept-invite?token=${rawToken}`;
+    const officeHours = `${formatTime12h(officeInTime)} – ${formatTime12h(officeOutTime)}`;
 
     const emailStatus = await sendEmployeeInviteEmail({
       to: email,
@@ -178,6 +201,7 @@ export async function POST(request: NextRequest) {
       employeeId,
       designation,
       department,
+      officeHours,
       inviteUrl,
       expiresHours: 48,
       adminName: session.name,

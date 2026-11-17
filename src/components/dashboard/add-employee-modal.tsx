@@ -13,12 +13,18 @@ import { useToast } from "@/context/toast-context";
 import { Department, Employee, InviteEmailResultDto } from "@/types";
 import { getDefaultCartoonAvatar } from "@/lib/avatar";
 import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  formatTime12h,
+} from "@/lib/office-time";
+import {
   User,
   Mail,
   Phone,
   Briefcase,
   MapPin,
   Calendar,
+  Clock,
   Sparkles,
   CheckCircle2,
   Copy,
@@ -29,10 +35,25 @@ import {
   Settings,
 } from "lucide-react";
 
+const FALLBACK_DEPARTMENT_NAMES = [
+  "Engineering",
+  "Product & Design",
+  "Sales & Marketing",
+  "Operations",
+  "HR & People",
+  "Finance & Legal",
+];
+
 export function AddEmployeeModal() {
-  const { isAddEmployeeOpen, setIsAddEmployeeOpen, addEmployee } = useHRMS();
+  const { isAddEmployeeOpen, setIsAddEmployeeOpen, addEmployee, departments } =
+    useHRMS();
   const { isSuperAdmin } = useAuth();
   const { showToast } = useToast();
+
+  const departmentOptions = React.useMemo(() => {
+    const names = departments.map((d) => d.name).filter(Boolean);
+    return names.length > 0 ? names : FALLBACK_DEPARTMENT_NAMES;
+  }, [departments]);
 
   const [formData, setFormData] = React.useState({
     name: "",
@@ -43,6 +64,8 @@ export function AddEmployeeModal() {
     salary: "65000",
     location: "Gulshan HQ, Dhaka",
     joinDate: new Date().toISOString().slice(0, 10),
+    officeInTime: DEFAULT_OFFICE_IN_TIME,
+    officeOutTime: DEFAULT_OFFICE_OUT_TIME,
   });
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -62,24 +85,33 @@ export function AddEmployeeModal() {
       errs.email = "Valid corporate email is required";
     if (!formData.role.trim()) errs.role = "Job designation is required";
     if (!formData.phone.trim()) errs.phone = "Phone number is required";
+    if (!formData.officeInTime) errs.officeInTime = "Office in time is required";
+    if (!formData.officeOutTime)
+      errs.officeOutTime = "Office out time is required";
     setErrors(errs);
     return Object.keys(errs).length === 0;
+  };
+
+  const resetFormFields = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      role: "",
+      department: departmentOptions[0] || "Engineering",
+      salary: "65000",
+      location: "Gulshan HQ, Dhaka",
+      joinDate: new Date().toISOString().slice(0, 10),
+      officeInTime: DEFAULT_OFFICE_IN_TIME,
+      officeOutTime: DEFAULT_OFFICE_OUT_TIME,
+    });
   };
 
   const resetAndClose = () => {
     setInviteResult(null);
     setSubmitError(null);
     setErrors({});
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      role: "",
-      department: "Engineering",
-      salary: "65000",
-      location: "Gulshan HQ, Dhaka",
-      joinDate: new Date().toISOString().slice(0, 10),
-    });
+    resetFormFields();
     setIsAddEmployeeOpen(false);
   };
 
@@ -98,7 +130,11 @@ export function AddEmployeeModal() {
       salary: Number(formData.salary) || 60000,
       location: formData.location.trim(),
       joinDate: formData.joinDate,
-      avatar: getDefaultCartoonAvatar(formData.name.trim() || formData.email.trim()),
+      officeInTime: formData.officeInTime || DEFAULT_OFFICE_IN_TIME,
+      officeOutTime: formData.officeOutTime || DEFAULT_OFFICE_OUT_TIME,
+      avatar: getDefaultCartoonAvatar(
+        formData.name.trim() || formData.email.trim()
+      ),
     });
 
     setIsSubmitting(false);
@@ -117,7 +153,11 @@ export function AddEmployeeModal() {
   const handleCopyLink = async (link: string) => {
     try {
       await navigator.clipboard.writeText(link);
-      showToast("Link Copied", "Employee activation URL copied to clipboard.", "success");
+      showToast(
+        "Link Copied",
+        "Employee activation URL copied to clipboard.",
+        "success"
+      );
     } catch {
       showToast("Copy Failed", "Please copy the link manually.", "warning");
     }
@@ -134,8 +174,8 @@ export function AddEmployeeModal() {
       }
       description={
         inviteResult
-          ? "Account created in MongoDB with email invitation verification."
-          : "Super Admin onboarding: adding an employee sends an email link where they accept and set their password."
+          ? "Account created in MongoDB with assigned shift hours and email invitation verification."
+          : "Super Admin onboarding: configure employee details, office in/out times, and send activation email."
       }
       size="lg"
     >
@@ -161,8 +201,18 @@ export function AddEmployeeModal() {
                 <Badge variant="orange" className="text-[10px]">
                   {inviteResult.employee.id}
                 </Badge>
+                <Badge variant="outline" className="text-[10px] bg-white">
+                  Shift:{" "}
+                  {formatTime12h(inviteResult.employee.officeInTime)} –{" "}
+                  {formatTime12h(
+                    inviteResult.employee.officeOutTime,
+                    "06:00 PM"
+                  )}
+                </Badge>
                 <Badge
-                  variant={inviteResult.emailStatus?.delivered ? "success" : "warning"}
+                  variant={
+                    inviteResult.emailStatus?.delivered ? "success" : "warning"
+                  }
                   className="text-[10px]"
                 >
                   {inviteResult.emailStatus?.delivered
@@ -234,16 +284,7 @@ export function AddEmployeeModal() {
               variant="outline"
               onClick={() => {
                 setInviteResult(null);
-                setFormData({
-                  name: "",
-                  email: "",
-                  phone: "",
-                  role: "",
-                  department: "Engineering",
-                  salary: "65000",
-                  location: "Gulshan HQ, Dhaka",
-                  joinDate: new Date().toISOString().slice(0, 10),
-                });
+                resetFormFields();
               }}
             >
               Add Another Employee
@@ -343,12 +384,11 @@ export function AddEmployeeModal() {
                   })
                 }
               >
-                <option value="Engineering">Engineering</option>
-                <option value="Product & Design">Product &amp; Design</option>
-                <option value="Sales & Marketing">Sales &amp; Marketing</option>
-                <option value="Operations">Operations</option>
-                <option value="HR & People">HR &amp; People</option>
-                <option value="Finance & Legal">Finance &amp; Legal</option>
+                {departmentOptions.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
               </Select>
             </div>
           </div>
@@ -386,6 +426,59 @@ export function AddEmployeeModal() {
                   {errors.phone}
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Office In / Out Shift Schedule */}
+          <div className="rounded-xl border border-orange-200/80 bg-orange-50/50 p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between flex-wrap gap-1">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-orange-600" />
+                <span>Office Shift Schedule (In / Out Time)</span>
+              </span>
+              <span className="text-[11px] text-red-600 font-semibold">
+                Clock-in after In Time is marked RED in monthly reports
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Office In Time <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="time"
+                  icon={<Clock className="h-4 w-4 text-emerald-600" />}
+                  value={formData.officeInTime}
+                  onChange={(e) =>
+                    setFormData({ ...formData, officeInTime: e.target.value })
+                  }
+                />
+                {errors.officeInTime && (
+                  <p className="mt-1 text-[11px] text-red-600 font-medium">
+                    {errors.officeInTime}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Office Out Time <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="time"
+                  icon={<Clock className="h-4 w-4 text-orange-600" />}
+                  value={formData.officeOutTime}
+                  onChange={(e) =>
+                    setFormData({ ...formData, officeOutTime: e.target.value })
+                  }
+                />
+                {errors.officeOutTime && (
+                  <p className="mt-1 text-[11px] text-red-600 font-medium">
+                    {errors.officeOutTime}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

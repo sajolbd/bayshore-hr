@@ -127,6 +127,8 @@ const emptyProfile: EmployeeProfile = {
   phone: "",
   location: "Gulshan HQ, Dhaka",
   joinDate: "",
+  officeInTime: "09:00",
+  officeOutTime: "18:00",
   reportingManager: "Shamim Ahsan",
   reportingManagerRole: "Super Admin",
   reportingManagerAvatar: getDefaultCartoonAvatar("shamim-ahsan"),

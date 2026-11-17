@@ -9,6 +9,7 @@ export interface InviteEmailPayload {
   employeeId: string;
   designation: string;
   department: string;
+  officeHours?: string;
   inviteUrl: string;
   expiresHours?: number;
   adminName?: string;
@@ -101,8 +102,9 @@ function buildInviteHtml(payload: InviteEmailPayload): string {
           </p>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 22px; font-size: 13px; color: #334155;">
             <div><strong>Employee ID:</strong> ${escapeHtml(payload.employeeId)}</div>
-            <div style="margin-top: 4px;"><strong>Designation:</strong> ${payload.designation}</div>
-            <div style="margin-top: 4px;"><strong>Department:</strong> ${payload.department}</div>
+            <div style="margin-top: 4px;"><strong>Designation:</strong> ${escapeHtml(payload.designation)}</div>
+            <div style="margin-top: 4px;"><strong>Department:</strong> ${escapeHtml(payload.department)}</div>
+            ${payload.officeHours ? `<div style="margin-top: 4px;"><strong>Office Hours:</strong> ${escapeHtml(payload.officeHours)}</div>` : ""}
           </div>
           <div style="text-align: center; margin: 24px 0;">
             <a href="${payload.inviteUrl}" style="display: inline-block; background: #ea580c; color: #ffffff; font-weight: 700; font-size: 14px; text-decoration: none; padding: 12px 28px; border-radius: 10px;">
@@ -131,6 +133,7 @@ function buildInviteText(payload: InviteEmailPayload): string {
     `Employee ID: ${payload.employeeId}`,
     `Designation: ${payload.designation}`,
     `Department: ${payload.department}`,
+    ...(payload.officeHours ? [`Office Hours: ${payload.officeHours}`] : []),
     "",
     "Accept your invitation and set your login password using the link below:",
     payload.inviteUrl,

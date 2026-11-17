@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getSessionUser, isAdminRole } from "@/lib/auth-server";
 import { DepartmentModel } from "@/models/Department";
+import { ActivityLogModel } from "@/models/ActivityLog";
 import { getDefaultCartoonAvatar } from "@/lib/avatar";
 
 const DEFAULT_DEPARTMENTS = [
@@ -66,10 +67,15 @@ export async function GET() {
 
     await connectToDatabase();
 
-    // Auto-seed if empty
+    // Auto-seed defaults only on fresh DB (do not re-create if admin intentionally deleted departments)
     const count = await DepartmentModel.countDocuments();
     if (count === 0) {
-      await DepartmentModel.insertMany(DEFAULT_DEPARTMENTS);
+      const wasDeletedBefore = await ActivityLogModel.exists({
+        action: "deleted department",
+      });
+      if (!wasDeletedBefore) {
+        await DepartmentModel.insertMany(DEFAULT_DEPARTMENTS);
+      }
     }
 
     const docs = await DepartmentModel.find().sort({ name: 1 }).lean();
@@ -172,4 +178,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

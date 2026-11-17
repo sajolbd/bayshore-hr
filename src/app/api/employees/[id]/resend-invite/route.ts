@@ -8,6 +8,12 @@ import {
 } from "@/lib/auth-server";
 import { UserModel } from "@/models/User";
 import { sendEmployeeInviteEmail } from "@/lib/mailer";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  formatTime12h,
+  normalizeTime24h,
+} from "@/lib/office-time";
 
 export async function POST(
   request: NextRequest,
@@ -53,6 +59,9 @@ export async function POST(
 
     const baseUrl = getAppBaseUrl(request);
     const inviteUrl = `${baseUrl}/accept-invite?token=${rawToken}`;
+    const inTime = normalizeTime24h(user.officeInTime, DEFAULT_OFFICE_IN_TIME);
+    const outTime = normalizeTime24h(user.officeOutTime, DEFAULT_OFFICE_OUT_TIME);
+    const officeHours = `${formatTime12h(inTime)} – ${formatTime12h(outTime)}`;
 
     const emailStatus = await sendEmployeeInviteEmail({
       to: user.email,
@@ -60,8 +69,11 @@ export async function POST(
       employeeId: user.employeeId,
       designation: user.designation,
       department: user.department,
+      officeHours,
       inviteUrl,
       expiresHours: 48,
+      adminName: session.name,
+      adminEmail: session.email,
     });
 
     return NextResponse.json({ ok: true, emailStatus });

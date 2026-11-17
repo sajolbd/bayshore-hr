@@ -1,10 +1,4 @@
-export type Department =
-  | "Engineering"
-  | "Product & Design"
-  | "Sales & Marketing"
-  | "Operations"
-  | "HR & People"
-  | "Finance & Legal";
+export type Department = string;
 
 export type AttendanceStatus = "Present" | "Late" | "On Leave" | "Remote" | "Absent";
 
@@ -24,6 +18,8 @@ export interface Employee {
   phone: string;
   location: string;
   salary: number;
+  officeInTime?: string;
+  officeOutTime?: string;
   inviteSentAt?: string;
 }
 
@@ -66,6 +62,10 @@ export interface AttendanceRecord {
   dayLabel?: string;
   checkIn: string;
   checkOut: string | null;
+  scheduledInTime?: string;
+  scheduledOutTime?: string;
+  isLate?: boolean;
+  lateMinutes?: number;
   status: AttendanceStatus;
   workHours: string;
   location?: string;
@@ -267,6 +267,18 @@ export interface AnnualLeavePolicyItem {
   paid: boolean;
   description: string;
   color: string;
+}
+
+export interface DepartmentInfo {
+  id: string;
+  name: string;
+  head: string;
+  headRole: string;
+  headAvatar?: string;
+  headcount: number;
+  openPositions: number;
+  budget: number;
+  color?: string;
 }
 
 export interface OfficeHoliday {

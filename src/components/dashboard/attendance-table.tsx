@@ -11,16 +11,34 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useHRMS } from "@/context/hrms-context";
-import { Search, Clock, ArrowRight, MapPin } from "lucide-react";
+import { formatMinutesAsDuration, formatTime12h } from "@/lib/office-time";
+import {
+  Search,
+  Clock,
+  ArrowRight,
+  MapPin,
+  FileSpreadsheet,
+} from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export function AttendanceTable() {
-  const { attendanceRecords, openLocationModal } = useHRMS();
+  const {
+    attendanceRecords,
+    departments,
+    openLocationModal,
+    openMonthlyReportModal,
+  } = useHRMS();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [departmentFilter, setDepartmentFilter] = React.useState("All");
   const [statusFilter, setStatusFilter] = React.useState("All");
@@ -31,8 +49,30 @@ export function AttendanceTable() {
     });
   }, []);
 
-  const [dateFilterMode, setDateFilterMode] = React.useState<"today" | "custom" | "all">("today");
+  const [dateFilterMode, setDateFilterMode] = React.useState<
+    "today" | "custom" | "all"
+  >("today");
   const [customDate, setCustomDate] = React.useState<string>(todayDhakaKey);
+
+  const departmentFilterOptions = React.useMemo(() => {
+    const set = new Set<string>(
+      departments.map((d) => d.name).filter(Boolean)
+    );
+    attendanceRecords.forEach((r) => {
+      if (r.department) set.add(r.department);
+    });
+    if (set.size === 0) {
+      [
+        "Engineering",
+        "Product & Design",
+        "Sales & Marketing",
+        "Operations",
+        "HR & People",
+        "Finance & Legal",
+      ].forEach((d) => set.add(d));
+    }
+    return Array.from(set);
+  }, [departments, attendanceRecords]);
 
   const filteredRecords = attendanceRecords.filter((record) => {
     // 1. Date Filter (Default: Today's Only)
@@ -63,7 +103,14 @@ export function AttendanceTable() {
     return matchesSearch && matchesDept && matchesStatus;
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isLate?: boolean) => {
+    if (isLate || status === "Late") {
+      return (
+        <Badge variant="danger" dot>
+          Late Check-in
+        </Badge>
+      );
+    }
     switch (status) {
       case "Present":
         return (
@@ -71,15 +118,9 @@ export function AttendanceTable() {
             Present
           </Badge>
         );
-      case "Late":
-        return (
-          <Badge variant="warning" dot>
-            Late Check-in
-          </Badge>
-        );
       case "On Leave":
         return (
-          <Badge variant="danger" dot>
+          <Badge variant="warning" dot>
             On Leave
           </Badge>
         );
@@ -105,17 +146,29 @@ export function AttendanceTable() {
             </CardTitle>
             <CardDescription>
               {dateFilterMode === "today"
-                ? "Showing today's office attendance records. Use date filter to inspect past dates."
-                : `Showing records for ${dateFilterMode === "custom" ? customDate : "all historical dates"}.`}
+                ? "Showing today's office attendance. Clock-ins after assigned office time are highlighted in red."
+                : `Showing records for ${
+                    dateFilterMode === "custom" ? customDate : "all historical dates"
+                  }.`}
             </CardDescription>
           </div>
-          <Link
-            href="/attendance"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 hover:underline"
-          >
-            <span>View Full Timesheets</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => openMonthlyReportModal()}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline cursor-pointer"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <span>Monthly Excel</span>
+            </button>
+            <Link
+              href="/attendance"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 hover:underline"
+            >
+              <span>View Full Timesheets</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
 
         {/* Date Filter & Search Controls */}
@@ -150,7 +203,9 @@ export function AttendanceTable() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-slate-500 font-medium">Pick Date:</span>
+              <span className="text-[11px] text-slate-500 font-medium">
+                Pick Date:
+              </span>
               <input
                 type="date"
                 value={customDate}
@@ -181,12 +236,11 @@ export function AttendanceTable() {
                 className="h-8 text-xs py-0 w-36"
               >
                 <option value="All">All Departments</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Product & Design">Product & Design</option>
-                <option value="Sales & Marketing">Sales & Marketing</option>
-                <option value="Operations">Operations</option>
-                <option value="HR & People">HR & People</option>
-                <option value="Finance & Legal">Finance & Legal</option>
+                {departmentFilterOptions.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
               </Select>
 
               <Select
@@ -228,75 +282,129 @@ export function AttendanceTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Employee</TableHead>
-                <TableHead>Department &amp; Role</TableHead>
+                <TableHead>Department &amp; Shift</TableHead>
                 <TableHead>Check-in</TableHead>
                 <TableHead>Location &amp; Verification</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Hours Logged</TableHead>
+                <TableHead className="text-right">Hours / Report</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRecords.map((record) => (
-                <TableRow key={record.id} className="hover:bg-slate-50/70">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        src={record.avatar}
-                        alt={record.employeeName}
-                        fallback={record.employeeName}
-                        size="sm"
-                      />
-                      <div>
-                        <p className="text-xs font-semibold text-slate-900 leading-tight">
-                          {record.employeeName}
-                        </p>
-                        <p className="text-[11px] text-slate-400">
-                          {record.employeeId}
-                        </p>
+              {filteredRecords.map((record) => {
+                const isLateRecord =
+                  Boolean(record.isLate) || record.status === "Late";
+                const shiftInText = record.scheduledInTime
+                  ? formatTime12h(record.scheduledInTime)
+                  : "09:00 AM";
+
+                return (
+                  <TableRow
+                    key={record.id}
+                    className={
+                      isLateRecord
+                        ? "bg-red-50/30 hover:bg-red-50/60"
+                        : "hover:bg-slate-50/70"
+                    }
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          src={record.avatar}
+                          alt={record.employeeName}
+                          fallback={record.employeeName}
+                          size="sm"
+                        />
+                        <div>
+                          <p className="text-xs font-semibold text-slate-900 leading-tight">
+                            {record.employeeName}
+                          </p>
+                          <p className="text-[11px] text-slate-400">
+                            {record.employeeId}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-xs font-medium text-slate-800">
-                      {record.role}
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      {record.department}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-xs font-mono font-medium text-slate-700">
-                      {record.checkIn}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {record.location && record.location !== "On Approved Leave" ? (
-                      <button
-                        type="button"
-                        onClick={() => openLocationModal(record)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-slate-700 border border-slate-200 transition-colors text-xs font-medium cursor-pointer"
-                        title="Click to view Location Map"
-                      >
-                        <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" />
-                        <span className="truncate max-w-[130px]">{record.location}</span>
-                        {record.geo?.geofenceStatus === "Inside Office Geofence" ? (
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" title="Inside Geofence" />
-                        ) : record.geo?.geofenceStatus === "Field Client Visit" ? (
-                          <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" title="Field Visit" />
-                        ) : null}
-                      </button>
-                    ) : (
-                      <span className="text-slate-400 text-xs">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{getStatusBadge(record.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <span className="text-xs font-mono font-semibold text-slate-800">
-                      {record.workHours}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-xs font-medium text-slate-800">
+                        {record.role}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        {record.department} • In: {shiftInText}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      {isLateRecord ? (
+                        <div className="inline-flex flex-col gap-0.5">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-red-100 border border-red-300 px-2 py-0.5 text-xs font-mono font-bold text-red-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-600 shrink-0" />
+                            <span>{record.checkIn}</span>
+                          </span>
+                          {record.lateMinutes && record.lateMinutes > 0 ? (
+                            <span className="text-[10px] font-semibold text-red-600">
+                              +{formatMinutesAsDuration(record.lateMinutes)} late
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <span className="text-xs font-mono font-medium text-emerald-700">
+                          {record.checkIn}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {record.location &&
+                      record.location !== "On Approved Leave" ? (
+                        <button
+                          type="button"
+                          onClick={() => openLocationModal(record)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-slate-700 border border-slate-200 transition-colors text-xs font-medium cursor-pointer"
+                          title="Click to view Location Map"
+                        >
+                          <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" />
+                          <span className="truncate max-w-[130px]">
+                            {record.location}
+                          </span>
+                          {record.geo?.geofenceStatus ===
+                          "Inside Office Geofence" ? (
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"
+                              title="Inside Geofence"
+                            />
+                          ) : record.geo?.geofenceStatus ===
+                            "Field Client Visit" ? (
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0"
+                              title="Field Visit"
+                            />
+                          ) : null}
+                        </button>
+                      ) : (
+                        <span className="text-slate-400 text-xs">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(record.status, isLateRecord)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-xs font-mono font-semibold text-slate-800">
+                          {record.workHours}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openMonthlyReportModal(record.employeeId)
+                          }
+                          title={`Download ${record.employeeName}'s Monthly Excel`}
+                          className="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
+                        >
+                          <FileSpreadsheet className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

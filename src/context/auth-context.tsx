@@ -17,6 +17,8 @@ export interface SystemUser extends Omit<AdminUser, "role"> {
   role: UserRole;
   designation?: string;
   isEmployee?: boolean;
+  officeInTime?: string;
+  officeOutTime?: string;
 }
 
 interface AuthContextValue {
@@ -50,6 +52,8 @@ function mapApiUser(apiUser: {
   department: string;
   designation?: string;
   status?: string;
+  officeInTime?: string;
+  officeOutTime?: string;
 }): SystemUser {
   return {
     id: apiUser.employeeId || apiUser.id || "USER",
@@ -70,6 +74,8 @@ function mapApiUser(apiUser: {
     status: apiUser.status === "Suspended" ? "Suspended" : "Active",
     twoFactorEnabled: true,
     isEmployee: apiUser.role === "Employee",
+    officeInTime: apiUser.officeInTime || "09:00",
+    officeOutTime: apiUser.officeOutTime || "18:00",
   };
 }
 

@@ -14,6 +14,7 @@ import {
   OfficeHoliday,
   LeaveType,
   InviteEmailResultDto,
+  DepartmentInfo,
 } from "@/types";
 import { EmployeeLeaveBalance } from "@/types/employee-portal";
 import {
@@ -34,6 +35,7 @@ interface HRMSContextValue {
   activities: ActivityItem[];
   interviews: InterviewItem[];
   announcements: AnnouncementItem[];
+  departments: DepartmentInfo[];
   isLoadingData: boolean;
   refreshHRMSData: () => Promise<void>;
   // Modals & Navigation
@@ -45,6 +47,10 @@ interface HRMSContextValue {
   setIsAddEmployeeOpen: (open: boolean) => void;
   isExportModalOpen: boolean;
   setIsExportModalOpen: (open: boolean) => void;
+  isMonthlyReportModalOpen: boolean;
+  monthlyReportEmployeeId: string | null;
+  openMonthlyReportModal: (employeeId?: string) => void;
+  closeMonthlyReportModal: () => void;
   isSearchModalOpen: boolean;
   setIsSearchModalOpen: (open: boolean) => void;
   searchQuery: string;
@@ -126,6 +132,7 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
     React.useState<OfficeHoliday[]>(companyHolidaysList);
   const [expenseClaims, setExpenseClaims] = React.useState<ExpenseClaim[]>([]);
   const [activities, setActivities] = React.useState<ActivityItem[]>([]);
+  const [departments, setDepartments] = React.useState<DepartmentInfo[]>([]);
   const [birthdays] = React.useState<BirthdayItem[]>(mockBirthdays);
   const [interviews] = React.useState<InterviewItem[]>(mockUpcomingInterviews);
   const [announcements] = React.useState<AnnouncementItem[]>(mockAnnouncements);
@@ -135,6 +142,10 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = React.useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = React.useState(false);
+  const [isMonthlyReportModalOpen, setIsMonthlyReportModalOpen] =
+    React.useState(false);
+  const [monthlyReportEmployeeId, setMonthlyReportEmployeeId] =
+    React.useState<string | null>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
@@ -189,13 +200,15 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const [empRes, attRes, leavesRes, claimsRes, dashRes] = await Promise.all([
-        fetch("/api/employees", { cache: "no-store" }),
-        fetch("/api/attendance", { cache: "no-store" }),
-        leavesReq,
-        fetch("/api/claims", { cache: "no-store" }),
-        fetch("/api/dashboard", { cache: "no-store" }),
-      ]);
+      const [empRes, attRes, leavesRes, claimsRes, dashRes, deptRes] =
+        await Promise.all([
+          fetch("/api/employees", { cache: "no-store" }),
+          fetch("/api/attendance", { cache: "no-store" }),
+          leavesReq,
+          fetch("/api/claims", { cache: "no-store" }),
+          fetch("/api/dashboard", { cache: "no-store" }),
+          fetch("/api/departments", { cache: "no-store" }),
+        ]);
 
       if (empRes.ok) {
         const d = (await empRes.json()) as { employees?: Employee[] };
@@ -223,6 +236,10 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         const d = (await dashRes.json()) as { activities?: ActivityItem[] };
         if (d.activities) setActivities(d.activities);
       }
+      if (deptRes.ok) {
+        const d = (await deptRes.json()) as { departments?: DepartmentInfo[] };
+        if (d.departments) setDepartments(d.departments);
+      }
     } catch {
       // ignore transient errors cleanly
     } finally {
@@ -239,6 +256,16 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
   }, [isHydrated, isAuthenticated, refreshHRMSData]);
 
   const toggleSidebar = () => setIsSidebarCollapsed((prev) => !prev);
+
+  const openMonthlyReportModal = (employeeId?: string) => {
+    setMonthlyReportEmployeeId(employeeId || null);
+    setIsMonthlyReportModalOpen(true);
+  };
+
+  const closeMonthlyReportModal = () => {
+    setIsMonthlyReportModalOpen(false);
+    setMonthlyReportEmployeeId(null);
+  };
 
   const openViewEmployee = (emp: Employee) => {
     setSelectedEmployee(emp);
@@ -717,6 +744,7 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         activities: isAuthenticated ? activities : [],
         interviews,
         announcements,
+        departments: isAuthenticated ? departments : [],
         isLoadingData,
         refreshHRMSData,
         isSidebarCollapsed,
@@ -727,6 +755,10 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         setIsAddEmployeeOpen,
         isExportModalOpen,
         setIsExportModalOpen,
+        isMonthlyReportModalOpen,
+        monthlyReportEmployeeId,
+        openMonthlyReportModal,
+        closeMonthlyReportModal,
         isSearchModalOpen,
         setIsSearchModalOpen,
         searchQuery,

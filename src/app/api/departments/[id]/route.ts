@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getSessionUser, isAdminRole } from "@/lib/auth-server";
 import { DepartmentModel } from "@/models/Department";
+import { ActivityLogModel } from "@/models/ActivityLog";
 import mongoose from "mongoose";
 
 export async function PATCH(
@@ -113,6 +114,10 @@ export async function DELETE(
     }
 
     const { id } = await context.params;
+    if (!id) {
+      return NextResponse.json({ error: "Department ID is required" }, { status: 400 });
+    }
+
     await connectToDatabase();
 
     const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { name: id };
@@ -122,7 +127,19 @@ export async function DELETE(
       return NextResponse.json({ error: "Department not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, message: `Department ${deleted.name} deleted.` });
+    await ActivityLogModel.create({
+      user: session.name,
+      avatar: session.avatar,
+      action: "deleted department",
+      target: deleted.name,
+      type: "policy",
+    });
+
+    return NextResponse.json({
+      success: true,
+      id: deleted._id.toString(),
+      message: `Department ${deleted.name} deleted.`,
+    });
   } catch (err) {
     console.error("DELETE /api/departments/[id] error:", err);
     return NextResponse.json(
@@ -131,4 +148,3 @@ export async function DELETE(
     );
   }
 }
-

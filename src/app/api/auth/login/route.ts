@@ -96,6 +96,8 @@ export async function POST(request: NextRequest) {
         location: user.location,
         joinDate: user.joinDate,
         salary: user.salary,
+        officeInTime: user.officeInTime || "09:00",
+        officeOutTime: user.officeOutTime || "18:00",
       },
     });
 

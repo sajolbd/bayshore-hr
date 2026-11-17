@@ -7,6 +7,13 @@ import { AttendanceModel } from "@/models/Attendance";
 import { LeaveRequestModel } from "@/models/LeaveRequest";
 import { ExpenseClaimModel } from "@/models/ExpenseClaim";
 import { ActivityLogModel } from "@/models/ActivityLog";
+import { getDhakaDateInfo } from "@/lib/geo";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  evaluateClockInLate,
+  normalizeTime24h,
+} from "@/lib/office-time";
 
 export async function PATCH(
   request: NextRequest,
@@ -38,6 +45,8 @@ export async function PATCH(
       location: string;
       status: string;
       joinDate: string;
+      officeInTime: string;
+      officeOutTime: string;
     }>;
 
     const user = await UserModel.findOne({ employeeId: id, role: "Employee" });
@@ -58,6 +67,18 @@ export async function PATCH(
     }
     if (body.location) user.location = body.location.trim();
     if (body.joinDate) user.joinDate = body.joinDate;
+    if (typeof body.officeInTime === "string" && body.officeInTime.trim()) {
+      user.officeInTime = normalizeTime24h(
+        body.officeInTime,
+        DEFAULT_OFFICE_IN_TIME
+      );
+    }
+    if (typeof body.officeOutTime === "string" && body.officeOutTime.trim()) {
+      user.officeOutTime = normalizeTime24h(
+        body.officeOutTime,
+        DEFAULT_OFFICE_OUT_TIME
+      );
+    }
     if (
       body.status &&
       ["Invited", "Active", "On Leave", "Terminated", "Suspended"].includes(
@@ -68,6 +89,9 @@ export async function PATCH(
     }
 
     await user.save();
+
+    const resolvedIn = normalizeTime24h(user.officeInTime, DEFAULT_OFFICE_IN_TIME);
+    const resolvedOut = normalizeTime24h(user.officeOutTime, DEFAULT_OFFICE_OUT_TIME);
 
     await AttendanceModel.updateMany(
       { employeeId: id },
@@ -80,6 +104,20 @@ export async function PATCH(
         },
       }
     );
+
+    // Sync today's punch schedule & re-evaluate lateness if office hours were adjusted
+    const { dateKey } = getDhakaDateInfo();
+    const todayAtt = await AttendanceModel.findOne({ employeeId: id, dateKey });
+    if (todayAtt) {
+      const isLeave = todayAtt.status === "On Leave" || todayAtt.status === "Absent";
+      const lateEval = evaluateClockInLate(todayAtt.checkIn, resolvedIn);
+      todayAtt.scheduledInTime = resolvedIn;
+      todayAtt.scheduledOutTime = resolvedOut;
+      if (!isLeave) {
+        todayAtt.status = lateEval.isLate ? "Late" : "Present";
+      }
+      await todayAtt.save();
+    }
 
     await ActivityLogModel.create({
       user: session.name,
@@ -102,6 +140,8 @@ export async function PATCH(
         phone: user.phone,
         location: user.location,
         salary: user.salary,
+        officeInTime: resolvedIn,
+        officeOutTime: resolvedOut,
       },
     });
   } catch (err) {

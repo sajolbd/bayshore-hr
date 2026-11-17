@@ -22,6 +22,11 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EditProfileModal } from "@/components/employee/edit-profile-modal";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  formatTime12h,
+} from "@/lib/office-time";
 
 export default function EmployeeProfilePage() {
   const { profile } = useEmployee();
@@ -290,6 +295,16 @@ export default function EmployeeProfilePage() {
               <div className="py-2 flex justify-between">
                 <span className="text-slate-500">Work Model:</span>
                 <span className="font-semibold text-slate-800">100% Onsite (Gulshan HQ)</span>
+              </div>
+              <div className="py-2 flex justify-between">
+                <span className="text-slate-500">Office Hours:</span>
+                <span className="font-semibold text-orange-700">
+                  {formatTime12h(profile.officeInTime || DEFAULT_OFFICE_IN_TIME)}{" "}
+                  –{" "}
+                  {formatTime12h(
+                    profile.officeOutTime || DEFAULT_OFFICE_OUT_TIME
+                  )}
+                </span>
               </div>
               <div className="py-2 flex justify-between">
                 <span className="text-slate-500">Probation Status:</span>

@@ -4,11 +4,34 @@ import * as React from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useHRMS } from "@/context/hrms-context";
-import { FileText, FileSpreadsheet, Check, Download, Loader2 } from "lucide-react";
+import { formatTime12h } from "@/lib/office-time";
+import {
+  FileText,
+  FileSpreadsheet,
+  Check,
+  Download,
+  Loader2,
+  ArrowRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function csvEscape(val: string | number | undefined | null): string {
+  const str = String(val ?? "");
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
 export function ExportModal() {
-  const { isExportModalOpen, setIsExportModalOpen, exportReport } = useHRMS();
+  const {
+    isExportModalOpen,
+    setIsExportModalOpen,
+    openMonthlyReportModal,
+    employees,
+    attendanceRecords,
+    exportReport,
+  } = useHRMS();
 
   const [format, setFormat] = React.useState<"csv" | "xlsx" | "pdf">("csv");
   const [dateRange, setDateRange] = React.useState("November 2026");
@@ -29,28 +52,66 @@ export function ExportModal() {
     setIsDownloading(true);
 
     setTimeout(() => {
-      // Trigger client-side simulated CSV download
-      const headers = "ID,Name,Department,Role,Status,JoinDate\n";
-      const rows =
-        "EMP-1042,Elena Rostova,Engineering,Senior Cloud Architect,Active,2023-04-15\n" +
-        "EMP-1089,David Chen,Product & Design,Lead Product Designer,Active,2022-11-01\n" +
-        "EMP-1102,Marcus Vance,Engineering,Backend Team Lead,Active,2021-08-20\n" +
-        "EMP-1115,Sophia Al-Mansoor,Sales & Marketing,Enterprise Sales Director,Active,2022-03-10\n" +
-        "EMP-1120,Carlos Mendez,Operations,Operations Manager,Active,2022-07-05\n";
+      let csvContent = "";
+      if (modules.employees) {
+        csvContent +=
+          "Employee ID,Name,Email,Department,Role,Status,JoinDate,Office In Time,Office Out Time\n";
+        for (const emp of employees) {
+          csvContent += [
+            csvEscape(emp.id),
+            csvEscape(emp.name),
+            csvEscape(emp.email),
+            csvEscape(emp.department),
+            csvEscape(emp.role),
+            csvEscape(emp.status),
+            csvEscape(emp.joinDate),
+            csvEscape(formatTime12h(emp.officeInTime)),
+            csvEscape(formatTime12h(emp.officeOutTime, "06:00 PM")),
+          ].join(",") + "\n";
+        }
+      }
 
-      const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
+      if (modules.attendance) {
+        if (csvContent) csvContent += "\n";
+        csvContent +=
+          "Date,Employee ID,Name,Department,Check-In,Check-Out,Assigned In,Work Hours,Status,Location\n";
+        for (const rec of attendanceRecords) {
+          csvContent += [
+            csvEscape(rec.dateKey),
+            csvEscape(rec.employeeId),
+            csvEscape(rec.employeeName),
+            csvEscape(rec.department),
+            csvEscape(rec.checkIn),
+            csvEscape(rec.checkOut || "--"),
+            csvEscape(formatTime12h(rec.scheduledInTime)),
+            csvEscape(rec.workHours),
+            csvEscape(rec.isLate ? "Late" : rec.status),
+            csvEscape(rec.location),
+          ].join(",") + "\n";
+        }
+      }
+
+      if (!csvContent) {
+        csvContent = "ID,Name,Status\n";
+      }
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `HRMS_Report_${dateRange.replace(/\s+/g, "_")}.${format}`);
+      link.setAttribute(
+        "download",
+        `HRMS_Report_${dateRange.replace(/\s+/g, "_")}.csv`
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
 
       setIsDownloading(false);
       setIsExportModalOpen(false);
-      exportReport(format, dateRange);
-    }, 900);
+      exportReport("csv", dateRange);
+    }, 350);
   };
 
   return (
@@ -58,14 +119,39 @@ export function ExportModal() {
       isOpen={isExportModalOpen}
       onClose={() => setIsExportModalOpen(false)}
       title="Export HR Analytics & Reports"
-      description="Download complete system metrics, attendance summaries, and department roster."
+      description="Download system metrics, attendance summaries, or open individual monthly Excel attendance sheets."
       size="md"
     >
       <div className="space-y-5">
+        {/* Direct link to Individual Monthly Excel Report */}
+        <button
+          type="button"
+          onClick={() => {
+            setIsExportModalOpen(false);
+            openMonthlyReportModal();
+          }}
+          className="w-full flex items-center justify-between gap-3 p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/80 text-left transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-600 text-white shrink-0">
+              <FileSpreadsheet className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-emerald-950">
+                Individual Employee Monthly Excel (.xlsx)
+              </p>
+              <p className="text-[11px] text-emerald-700">
+                Includes RED-marked late clock-in highlights per employee
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-emerald-700 shrink-0" />
+        </button>
+
         {/* Format Selection */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-2">
-            Select Export Format
+            Select Summary Format
           </label>
           <div className="grid grid-cols-3 gap-3">
             {[
@@ -79,7 +165,14 @@ export function ExportModal() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setFormat(item.id as "csv" | "xlsx" | "pdf")}
+                  onClick={() => {
+                    if (item.id === "xlsx") {
+                      setIsExportModalOpen(false);
+                      openMonthlyReportModal();
+                      return;
+                    }
+                    setFormat(item.id as "csv" | "xlsx" | "pdf");
+                  }}
                   className={cn(
                     "flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all cursor-pointer relative",
                     isSelected
@@ -112,7 +205,7 @@ export function ExportModal() {
             Timeframe Period
           </label>
           <div className="grid grid-cols-3 gap-2">
-            {["November 2026", "Q3 2026", "Year to Date (2026)"].map((range) => (
+            {["November 2026", "Q4 2026", "Year to Date (2026)"].map((range) => (
               <button
                 key={range}
                 type="button"
@@ -138,7 +231,7 @@ export function ExportModal() {
           <div className="grid grid-cols-2 gap-2 text-xs">
             {[
               { key: "attendance", label: "Attendance & Work Logs" },
-              { key: "employees", label: "Employee Directory & Roles" },
+              { key: "employees", label: "Employee Directory & Shifts" },
               { key: "leaves", label: "Leave Requests & Balances" },
               { key: "payroll", label: "Compensation Summary" },
             ].map((item) => {
@@ -190,7 +283,7 @@ export function ExportModal() {
             ) : (
               <>
                 <Download className="h-4 w-4" />
-                <span>Download Report</span>
+                <span>Download Summary</span>
               </>
             )}
           </Button>

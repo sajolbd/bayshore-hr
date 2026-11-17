@@ -13,6 +13,7 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { SearchModal } from "@/components/layout/search-modal";
 import { AddEmployeeModal } from "@/components/dashboard/add-employee-modal";
 import { ExportModal } from "@/components/dashboard/export-modal";
+import { MonthlyAttendanceReportModal } from "@/components/attendance/monthly-attendance-report-modal";
 import { EmployeeDetailModal } from "@/components/employees/employee-detail-modal";
 import { EditEmployeeModal } from "@/components/employees/edit-employee-modal";
 import { DeleteEmployeeModal } from "@/components/employees/delete-employee-modal";
@@ -121,6 +122,7 @@ function ShellContent({ children }: { children: React.ReactNode }) {
       <SearchModal />
       <AddEmployeeModal />
       <ExportModal />
+      <MonthlyAttendanceReportModal />
       <EmployeeDetailModal />
       <EditEmployeeModal />
       <DeleteEmployeeModal />

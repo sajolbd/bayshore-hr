@@ -7,15 +7,44 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useHRMS } from "@/context/hrms-context";
 import { Department, Employee } from "@/types";
-import { DollarSign, MapPin, Check, User, Mail, Phone, Briefcase } from "lucide-react";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  normalizeTime24h,
+} from "@/lib/office-time";
+import {
+  DollarSign,
+  MapPin,
+  Check,
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+  Clock,
+} from "lucide-react";
+
+const FALLBACK_DEPARTMENT_NAMES = [
+  "Engineering",
+  "Product & Design",
+  "Sales & Marketing",
+  "Operations",
+  "HR & People",
+  "Finance & Legal",
+];
 
 interface EditFormProps {
   employee: Employee;
+  departmentOptions: string[];
   onClose: () => void;
   onUpdate: (id: string, data: Partial<Employee>) => Promise<void>;
 }
 
-function EditEmployeeForm({ employee, onClose, onUpdate }: EditFormProps) {
+function EditEmployeeForm({
+  employee,
+  departmentOptions,
+  onClose,
+  onUpdate,
+}: EditFormProps) {
   const [formData, setFormData] = React.useState({
     name: employee.name,
     email: employee.email,
@@ -25,10 +54,25 @@ function EditEmployeeForm({ employee, onClose, onUpdate }: EditFormProps) {
     salary: employee.salary.toString(),
     location: employee.location,
     status: employee.status,
+    officeInTime: normalizeTime24h(
+      employee.officeInTime,
+      DEFAULT_OFFICE_IN_TIME
+    ),
+    officeOutTime: normalizeTime24h(
+      employee.officeOutTime,
+      DEFAULT_OFFICE_OUT_TIME
+    ),
   });
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  const mergedDepartments = React.useMemo(() => {
+    if (departmentOptions.includes(employee.department)) {
+      return departmentOptions;
+    }
+    return [employee.department, ...departmentOptions];
+  }, [departmentOptions, employee.department]);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -55,6 +99,8 @@ function EditEmployeeForm({ employee, onClose, onUpdate }: EditFormProps) {
       salary: Number(formData.salary) || 60000,
       location: formData.location,
       status: formData.status,
+      officeInTime: formData.officeInTime || DEFAULT_OFFICE_IN_TIME,
+      officeOutTime: formData.officeOutTime || DEFAULT_OFFICE_OUT_TIME,
     });
 
     setIsSubmitting(false);
@@ -134,12 +180,11 @@ function EditEmployeeForm({ employee, onClose, onUpdate }: EditFormProps) {
               })
             }
           >
-            <option value="Engineering">Engineering</option>
-            <option value="Product & Design">Product & Design</option>
-            <option value="Sales & Marketing">Sales & Marketing</option>
-            <option value="Operations">Operations</option>
-            <option value="HR & People">HR & People</option>
-            <option value="Finance & Legal">Finance & Legal</option>
+            {mergedDepartments.map((dept) => (
+              <option key={dept} value={dept}>
+                {dept}
+              </option>
+            ))}
           </Select>
         </div>
       </div>
@@ -199,6 +244,49 @@ function EditEmployeeForm({ employee, onClose, onUpdate }: EditFormProps) {
         </div>
       </div>
 
+      {/* Office In / Out Time */}
+      <div className="rounded-xl border border-orange-200/80 bg-orange-50/50 p-3.5 space-y-2.5">
+        <div className="flex items-center justify-between flex-wrap gap-1">
+          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 text-orange-600" />
+            <span>Office Shift Schedule</span>
+          </span>
+          <span className="text-[11px] text-red-600 font-semibold">
+            Late clock-ins marked RED in monthly report
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Office In Time
+            </label>
+            <Input
+              type="time"
+              icon={<Clock className="h-4 w-4 text-emerald-600" />}
+              value={formData.officeInTime}
+              onChange={(e) =>
+                setFormData({ ...formData, officeInTime: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Office Out Time
+            </label>
+            <Input
+              type="time"
+              icon={<Clock className="h-4 w-4 text-orange-600" />}
+              value={formData.officeOutTime}
+              onChange={(e) =>
+                setFormData({ ...formData, officeOutTime: e.target.value })
+              }
+            />
+          </div>
+        </div>
+      </div>
+
       <div>
         <label className="block text-xs font-semibold text-slate-700 mb-1">
           Workplace Location
@@ -235,21 +323,28 @@ export function EditEmployeeModal() {
     isEditEmployeeOpen,
     closeEditEmployee,
     updateEmployee,
+    departments,
   } = useHRMS();
 
   if (!employeeToEdit) return null;
+
+  const departmentOptions =
+    departments.length > 0
+      ? departments.map((d) => d.name)
+      : FALLBACK_DEPARTMENT_NAMES;
 
   return (
     <Modal
       isOpen={isEditEmployeeOpen}
       onClose={closeEditEmployee}
       title="Edit Employee Information"
-      description={`Update employment details and compensation for ${employeeToEdit.name} (${employeeToEdit.id})`}
+      description={`Update employment details, office shift schedule, and compensation for ${employeeToEdit.name} (${employeeToEdit.id})`}
       size="lg"
     >
       <EditEmployeeForm
         key={employeeToEdit.id}
         employee={employeeToEdit}
+        departmentOptions={departmentOptions}
         onClose={closeEditEmployee}
         onUpdate={updateEmployee}
       />

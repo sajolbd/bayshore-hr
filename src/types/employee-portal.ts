@@ -10,6 +10,8 @@ export interface EmployeeProfile {
   phone: string;
   location: string;
   joinDate: string;
+  officeInTime?: string;
+  officeOutTime?: string;
   reportingManager: string;
   reportingManagerRole: string;
   reportingManagerAvatar: string;
@@ -61,6 +63,10 @@ export interface EmployeePunchRecord {
   day: string;  // "Sun"
   checkIn: string | null;
   checkOut: string | null;
+  scheduledInTime?: string;
+  scheduledOutTime?: string;
+  isLate?: boolean;
+  lateMinutes?: number;
   workHours: string;
   status: AttendanceStatus;
   overtimeHours?: string;

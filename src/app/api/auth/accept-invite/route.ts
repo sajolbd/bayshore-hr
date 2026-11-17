@@ -147,6 +147,8 @@ export async function POST(request: NextRequest) {
         designation: user.designation,
         avatar: user.avatar,
         status: user.status,
+        officeInTime: user.officeInTime || "09:00",
+        officeOutTime: user.officeOutTime || "18:00",
       },
     });
 

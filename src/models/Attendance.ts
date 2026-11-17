@@ -34,6 +34,8 @@ export interface IAttendance {
   checkInAt: Date;
   checkOut: string | null;
   checkOutAt: Date | null;
+  scheduledInTime?: string;
+  scheduledOutTime?: string;
   status: "Present" | "Late" | "On Leave" | "Remote" | "Absent";
   workHours: string;
   location: string;
@@ -83,6 +85,8 @@ const AttendanceSchema = new Schema<IAttendance>(
     checkInAt: { type: Date, required: true },
     checkOut: { type: String, default: null },
     checkOutAt: { type: Date, default: null },
+    scheduledInTime: { type: String },
+    scheduledOutTime: { type: String },
     status: {
       type: String,
       default: "Present",

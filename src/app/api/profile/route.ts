@@ -56,6 +56,8 @@ export async function GET() {
         nidOrPassport: user.nidOrPassport || "Pending Verification",
         dateOfBirth: user.dateOfBirth || "Not Specified",
         salary: user.salary,
+        officeInTime: user.officeInTime || "09:00",
+        officeOutTime: user.officeOutTime || "18:00",
         emergencyContact: user.emergencyContact || {
           name: "",
           relationship: "",

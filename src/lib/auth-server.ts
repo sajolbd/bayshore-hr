@@ -4,6 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { connectToDatabase } from "./mongodb";
 import { getJwtSecretValue } from "./crypto-utils";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  normalizeTime24h,
+} from "./office-time";
 import { UserModel, UserRoleType, UserStatusType } from "@/models/User";
 
 export const SESSION_COOKIE_NAME = "bayshore_session";
@@ -23,6 +28,8 @@ export interface SessionUser {
   location: string;
   joinDate: string;
   salary: number;
+  officeInTime: string;
+  officeOutTime: string;
 }
 
 interface JWTPayload {
@@ -136,6 +143,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       location: user.location,
       joinDate: user.joinDate,
       salary: user.salary,
+      officeInTime: normalizeTime24h(user.officeInTime, DEFAULT_OFFICE_IN_TIME),
+      officeOutTime: normalizeTime24h(user.officeOutTime, DEFAULT_OFFICE_OUT_TIME),
     };
   } catch {
     return null;

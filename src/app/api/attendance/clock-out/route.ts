@@ -5,6 +5,13 @@ import { getSessionUser } from "@/lib/auth-server";
 import { AttendanceModel } from "@/models/Attendance";
 import { ActivityLogModel } from "@/models/ActivityLog";
 import { BAYSHORE_HQ, getClientIp, getDhakaDateInfo } from "@/lib/geo";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  evaluateClockInLate,
+  formatTime12h,
+  normalizeTime24h,
+} from "@/lib/office-time";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +26,15 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const { dateKey, dayLabel, timeLabel } = getDhakaDateInfo(now);
     const clientIp = getClientIp(request);
+
+    const scheduledInTime = normalizeTime24h(
+      session.officeInTime,
+      DEFAULT_OFFICE_IN_TIME
+    );
+    const scheduledOutTime = normalizeTime24h(
+      session.officeOutTime,
+      DEFAULT_OFFICE_OUT_TIME
+    );
 
     const userOrClauses: Record<string, unknown>[] = [];
     if (session.employeeId) {
@@ -62,7 +78,7 @@ export async function POST(request: NextRequest) {
     let isNewlyCreated = false;
     if (!record) {
       isNewlyCreated = true;
-      const defaultCheckInTime = "09:00 AM";
+      const defaultCheckInTime = formatTime12h(scheduledInTime, "09:00 AM");
       const defaultCheckInAt = new Date(now.getTime() - 8 * 3600 * 1000);
       record = await AttendanceModel.create({
         employeeId: session.employeeId,
@@ -77,6 +93,8 @@ export async function POST(request: NextRequest) {
         checkInAt: defaultCheckInAt,
         checkOut: timeLabel,
         checkOutAt: now,
+        scheduledInTime,
+        scheduledOutTime,
         status: "Present",
         workHours: "8h 00m",
         location: "Gulshan HQ",
@@ -99,7 +117,6 @@ export async function POST(request: NextRequest) {
     let workHours = record.workHours || "8h 00m";
 
     if (!isNewlyCreated) {
-      // Calculate work hours safely
       const checkInDate = record.checkInAt
         ? new Date(record.checkInAt)
         : new Date(now.getTime() - 8 * 3600 * 1000);
@@ -127,6 +144,10 @@ export async function POST(request: NextRequest) {
         safeRec = updatedRecord;
       }
     }
+
+    const effectiveScheduledIn = safeRec.scheduledInTime || scheduledInTime;
+    const effectiveScheduledOut = safeRec.scheduledOutTime || scheduledOutTime;
+    const lateEval = evaluateClockInLate(safeRec.checkIn, effectiveScheduledIn);
 
     await ActivityLogModel.create({
       user: session.name,
@@ -158,6 +179,10 @@ export async function POST(request: NextRequest) {
         checkOutAt: safeRec.checkOutAt
           ? new Date(safeRec.checkOutAt).toISOString()
           : now.toISOString(),
+        scheduledInTime: effectiveScheduledIn,
+        scheduledOutTime: effectiveScheduledOut,
+        isLate: lateEval.isLate,
+        lateMinutes: lateEval.lateMinutes,
         workHours: safeRec.workHours || workHours,
         status: safeRec.status,
         location: safeRec.location,

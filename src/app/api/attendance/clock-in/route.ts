@@ -11,6 +11,12 @@ import {
   getDhakaDateInfo,
   reverseGeocodeCoordinates,
 } from "@/lib/geo";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  evaluateClockInLate,
+  normalizeTime24h,
+} from "@/lib/office-time";
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,16 +101,20 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date();
-    const { dateKey, dayLabel, timeLabel, isLateOfficeShift } =
-      getDhakaDateInfo(now);
+    const { dateKey, dayLabel, timeLabel } = getDhakaDateInfo(now);
     const clientIp = getClientIp(request);
 
-    const status =
-      checkInType === "Field Check-In"
-        ? "Present"
-        : isLateOfficeShift
-        ? "Late"
-        : "Present";
+    const scheduledInTime = normalizeTime24h(
+      session.officeInTime,
+      DEFAULT_OFFICE_IN_TIME
+    );
+    const scheduledOutTime = normalizeTime24h(
+      session.officeOutTime,
+      DEFAULT_OFFICE_OUT_TIME
+    );
+
+    const lateEval = evaluateClockInLate(timeLabel, scheduledInTime);
+    const status = lateEval.isLate ? "Late" : "Present";
 
     const geoPayload = {
       latitude: lat,
@@ -137,6 +147,8 @@ export async function POST(request: NextRequest) {
           checkInAt: now,
           checkOut: null,
           checkOutAt: null,
+          scheduledInTime,
+          scheduledOutTime,
           status,
           workHours: "In Progress",
           location: shortLocation,
@@ -152,6 +164,8 @@ export async function POST(request: NextRequest) {
       action:
         checkInType === "Field Check-In"
           ? "completed field check-in at"
+          : lateEval.isLate
+          ? `clocked in (${lateEval.lateLabel}) at`
           : "clocked in with verified office location at",
       target: `${shortLocation} (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
       type: "onboarding",
@@ -164,11 +178,16 @@ export async function POST(request: NextRequest) {
         record: {
           id: record._id.toString(),
           date: record.dateKey,
+          dateKey: record.dateKey,
           day: record.dayLabel,
           checkIn: record.checkIn,
           checkInAt: record.checkInAt.toISOString(),
           checkOut: record.checkOut,
           checkOutAt: null,
+          scheduledInTime,
+          scheduledOutTime,
+          isLate: lateEval.isLate,
+          lateMinutes: lateEval.lateMinutes,
           workHours: record.workHours,
           status: record.status,
           location: record.location,

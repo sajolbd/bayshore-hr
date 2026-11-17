@@ -16,6 +16,11 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  formatTime12h,
+} from "@/lib/office-time";
 import { ApplyLeaveModal } from "@/components/employee/apply-leave-modal";
 import { PayslipModal } from "@/components/employee/payslip-modal";
 import { EmployeePayslip } from "@/types/employee-portal";
@@ -113,12 +118,21 @@ export default function EmployeeDashboardPage() {
               <h2 className="text-lg font-bold text-slate-900 mt-0.5">
                 Today&apos;s Attendance Status
               </h2>
-              <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+              <div className="flex items-center gap-2 mt-2 text-xs text-slate-500 flex-wrap">
                 <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" />
                 <span className="truncate">
                   {isClockedIn && punchHistory[0]
                     ? `Clocked in from: ${punchHistory[0].geo?.address || punchHistory[0].location}`
                     : `Assigned Workplace: ${profile.location || "Gulshan HQ"}`}
+                </span>
+                <span className="text-slate-300">•</span>
+                <span className="font-semibold text-orange-700">
+                  Shift:{" "}
+                  {formatTime12h(profile.officeInTime || DEFAULT_OFFICE_IN_TIME)}{" "}
+                  –{" "}
+                  {formatTime12h(
+                    profile.officeOutTime || DEFAULT_OFFICE_OUT_TIME
+                  )}
                 </span>
               </div>
             </div>
@@ -195,13 +209,20 @@ export default function EmployeeDashboardPage() {
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-            <span>Biometric Terminal Sync: #BIO-GLS-11 (Online)</span>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 pt-3 border-t border-slate-100">
+            <span>
+              Office Shift:{" "}
+              <strong className="text-slate-800">
+                {formatTime12h(profile.officeInTime, "09:00 AM")} –{" "}
+                {formatTime12h(profile.officeOutTime, "06:00 PM")}
+              </strong>{" "}
+              • Terminal #BIO-GLS-11
+            </span>
             <Link
               href="/employee/attendance"
               className="font-semibold text-orange-600 hover:underline flex items-center gap-1"
             >
-              View Full Attendance History →
+              View Full Attendance History &amp; Excel →
             </Link>
           </div>
         </div>
