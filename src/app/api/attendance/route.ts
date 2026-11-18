@@ -68,8 +68,8 @@ export async function GET(request: Request) {
           const effectiveStatus = isLeave
             ? r.status
             : lateEval.isLate
-            ? "Late"
-            : "Present";
+              ? "Late"
+              : "Present";
 
           return {
             id: r._id.toString(),
@@ -98,7 +98,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // Strict employee isolation: return ONLY own attendance records
+    // Strict employee isolation: return ONLY own Attendance records
     const empQuery: Record<string, unknown> = { employeeId: session.employeeId };
     if (dateFilter && dateFilter !== "all") {
       empQuery.dateKey = dateFilter;
@@ -128,8 +128,8 @@ export async function GET(request: Request) {
       const effectiveStatus = isLeave
         ? r.status
         : lateEval.isLate
-        ? "Late"
-        : "Present";
+          ? "Late"
+          : "Present";
 
       return {
         id: r._id.toString(),
