@@ -237,6 +237,10 @@ interface EmployeeContextType {
     phone: string;
     location: string;
     bloodGroup: string;
+    dateOfBirth?: string;
+    nidOrPassport?: string;
+    skills?: string[];
+    education?: { degree: string; institution: string; year: string }[];
     emergencyContact: {
       name: string;
       relationship: string;
@@ -752,6 +756,10 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
     phone: string;
     location: string;
     bloodGroup: string;
+    dateOfBirth?: string;
+    nidOrPassport?: string;
+    skills?: string[];
+    education?: { degree: string; institution: string; year: string }[];
     emergencyContact: {
       name: string;
       relationship: string;
@@ -778,6 +786,10 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
         phone: data.phone,
         location: data.location,
         bloodGroup: data.bloodGroup,
+        dateOfBirth: data.dateOfBirth ?? prev.dateOfBirth,
+        nidOrPassport: data.nidOrPassport ?? prev.nidOrPassport,
+        skills: data.skills ?? prev.skills,
+        education: data.education ?? prev.education,
         emergencyContact: data.emergencyContact,
       }));
       await Promise.all([refreshSession(), refreshHRMSData()]);

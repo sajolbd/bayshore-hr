@@ -34,6 +34,7 @@ export default function EmployeeAttendancePage() {
     punchHistory,
     isClockedIn,
     todayCheckInTime,
+    todayCheckOutTime,
     setIsClockInModalOpen,
     openLocationModal,
     clockOut,
@@ -228,14 +229,21 @@ export default function EmployeeAttendancePage() {
               </Button>
             </div>
           ) : (
-            <Button
-              variant="primary"
-              onClick={() => setIsClockInModalOpen(true)}
-              className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 font-bold gap-2 shadow-sm"
-            >
-              <Clock className="h-4 w-4" />
-              <span>Punch In (Office Location)</span>
-            </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+              {todayCheckOutTime && (
+                <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 text-center">
+                  Checked out at {todayCheckOutTime}. Accident? Re-punch in anytime.
+                </span>
+              )}
+              <Button
+                variant="primary"
+                onClick={() => setIsClockInModalOpen(true)}
+                className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 font-bold gap-2 shadow-sm"
+              >
+                <Clock className="h-4 w-4" />
+                <span>{todayCheckOutTime ? "Re-Punch In (Resume Shift)" : "Punch In (Office Location)"}</span>
+              </Button>
+            </div>
           )}
         </div>
       </div>

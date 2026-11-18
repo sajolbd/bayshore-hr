@@ -131,6 +131,16 @@ export async function POST(request: NextRequest) {
       timestamp: `Today at ${timeLabel}`,
     };
 
+    const existing = await AttendanceModel.findOne({
+      employeeId: session.employeeId,
+      dateKey,
+    });
+    const isRePunch = Boolean(existing && existing.checkOut);
+    const finalCheckIn = existing?.checkIn || timeLabel;
+    const finalCheckInAt = existing?.checkInAt || now;
+    const finalLateEval = evaluateClockInLate(finalCheckIn, scheduledInTime);
+    const finalStatus = finalLateEval.isLate ? "Late" : "Present";
+
     const record = await AttendanceModel.findOneAndUpdate(
       { employeeId: session.employeeId, dateKey },
       {
@@ -143,27 +153,31 @@ export async function POST(request: NextRequest) {
           role: session.designation,
           dateKey,
           dayLabel,
-          checkIn: timeLabel,
-          checkInAt: now,
+          checkIn: finalCheckIn,
+          checkInAt: finalCheckInAt,
           checkOut: null,
           checkOutAt: null,
           scheduledInTime,
           scheduledOutTime,
-          status,
+          status: finalStatus,
           workHours: "In Progress",
           location: shortLocation,
           geo: geoPayload,
         },
       },
       { upsert: true, new: true }
-    );    await ActivityLogModel.create({
+    );
+
+    await ActivityLogModel.create({
       user: session.name,
       avatar: session.avatar,
       action:
-        checkInType === "Field Check-In"
+        isRePunch
+          ? "resumed active shift (re-clock in after checkout) at"
+          : checkInType === "Field Check-In"
           ? "completed field check-in at"
-          : lateEval.isLate
-          ? `clocked in (${lateEval.lateLabel}) at`
+          : finalLateEval.isLate
+          ? `clocked in (${finalLateEval.lateLabel}) at`
           : "clocked in with verified office location at",
       target: `${shortLocation} (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
       type: "onboarding",
@@ -184,8 +198,8 @@ export async function POST(request: NextRequest) {
           checkOutAt: null,
           scheduledInTime,
           scheduledOutTime,
-          isLate: lateEval.isLate,
-          lateMinutes: lateEval.lateMinutes,
+          isLate: finalLateEval.isLate,
+          lateMinutes: finalLateEval.lateMinutes,
           workHours: record.workHours,
           status: record.status,
           location: record.location,

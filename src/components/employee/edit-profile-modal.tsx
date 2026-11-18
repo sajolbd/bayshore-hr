@@ -30,6 +30,10 @@ interface EditProfileFormProps {
     phone: string;
     location: string;
     bloodGroup: string;
+    dateOfBirth?: string;
+    nidOrPassport?: string;
+    skills?: string[];
+    education?: { degree: string; institution: string; year: string }[];
     emergencyContact: {
       name: string;
       relationship: string;
@@ -48,6 +52,12 @@ function EditProfileForm({
     phone: profile.phone,
     location: profile.location,
     bloodGroup: profile.bloodGroup,
+    dateOfBirth: profile.dateOfBirth === "Not Specified" ? "" : profile.dateOfBirth,
+    nidOrPassport: profile.nidOrPassport === "Pending Verification" ? "" : profile.nidOrPassport,
+    skills: (profile.skills || []).join(", "),
+    educationDegree: profile.education?.[0]?.degree || "",
+    educationInstitution: profile.education?.[0]?.institution || "",
+    educationYear: profile.education?.[0]?.year || "",
     emergencyName: profile.emergencyContact.name,
     emergencyRel: profile.emergencyContact.relationship,
     emergencyPhone: profile.emergencyContact.phone,
@@ -98,11 +108,31 @@ function EditProfileForm({
     setErrorMsg(null);
     setIsSaving(true);
     try {
+      const skillsArray = formData.skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const educationArray =
+        formData.educationDegree.trim() || formData.educationInstitution.trim()
+          ? [
+              {
+                degree: formData.educationDegree.trim(),
+                institution: formData.educationInstitution.trim(),
+                year: formData.educationYear.trim(),
+              },
+            ]
+          : profile.education || [];
+
       const ok = await updateProfile({
         ...(pendingAvatar ? { avatar: pendingAvatar } : {}),
         phone: formData.phone,
         location: formData.location,
         bloodGroup: formData.bloodGroup,
+        dateOfBirth: formData.dateOfBirth.trim() || "Not Specified",
+        nidOrPassport: formData.nidOrPassport.trim() || "Pending Verification",
+        skills: skillsArray,
+        education: educationArray,
         emergencyContact: {
           name: formData.emergencyName,
           relationship: formData.emergencyRel,
@@ -228,6 +258,26 @@ function EditProfileForm({
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Date of Birth"
+              type="text"
+              placeholder="e.g. 1996-08-15 or 15 Aug 1996"
+              value={formData.dateOfBirth}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, dateOfBirth: e.target.value }))
+              }
+            />
+            <Input
+              label="National ID (NID) / Smart Card"
+              placeholder="e.g. 19962691234567890"
+              value={formData.nidOrPassport}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, nidOrPassport: e.target.value }))
+              }
+            />
+          </div>
+
           <Input
             label="Current Residential Address & Work Hub"
             value={formData.location}
@@ -236,6 +286,56 @@ function EditProfileForm({
             }
             required
           />
+
+          <Input
+            label="Professional Skills (comma separated)"
+            placeholder="e.g. Next.js, TypeScript, UI/UX, Cloud Operations"
+            value={formData.skills}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, skills: e.target.value }))
+            }
+          />
+        </div>
+
+        <div className="pt-2 border-t border-slate-100 space-y-3">
+          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            Academic Background / Education
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Input
+              label="Degree / Certificate"
+              placeholder="e.g. B.Sc in CSE"
+              value={formData.educationDegree}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  educationDegree: e.target.value,
+                }))
+              }
+            />
+            <Input
+              label="Institution"
+              placeholder="e.g. University of Dhaka"
+              value={formData.educationInstitution}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  educationInstitution: e.target.value,
+                }))
+              }
+            />
+            <Input
+              label="Passing Year"
+              placeholder="e.g. 2021"
+              value={formData.educationYear}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  educationYear: e.target.value,
+                }))
+              }
+            />
+          </div>
         </div>
 
         <div className="pt-2 border-t border-slate-100 space-y-3">

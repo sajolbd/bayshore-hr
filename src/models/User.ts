@@ -34,6 +34,8 @@ export interface IUser {
   inviteTokenHash?: string | null;
   inviteExpiresAt?: Date | null;
   inviteSentAt?: Date | null;
+  resetTokenHash?: string | null;
+  resetExpiresAt?: Date | null;
   lastLoginAt?: Date | null;
   bloodGroup?: string;
   nidOrPassport?: string;
@@ -99,6 +101,8 @@ const UserSchema = new Schema<IUser>(
     inviteTokenHash: { type: String, select: false, default: null },
     inviteExpiresAt: { type: Date, default: null },
     inviteSentAt: { type: Date, default: null },
+    resetTokenHash: { type: String, select: false, default: null },
+    resetExpiresAt: { type: Date, default: null },
     lastLoginAt: { type: Date, default: null },
     bloodGroup: { type: String, default: "O+" },
     nidOrPassport: { type: String, default: "Pending Verification" },

@@ -368,3 +368,114 @@ export async function sendEmployeeInviteEmail(
     };
   }
 }
+
+export interface PasswordResetEmailPayload {
+  to: string;
+  name: string;
+  resetUrl: string;
+}
+
+export interface PasswordResetEmailResult {
+  delivered: boolean;
+  mode: "smtp" | "ethereal" | "direct-link";
+  resetUrl: string;
+  previewUrl?: string;
+  message: string;
+}
+
+export async function sendPasswordResetEmail(
+  payload: PasswordResetEmailPayload
+): Promise<PasswordResetEmailResult> {
+  const smtp = await resolveSmtpConfig();
+  const subject = "Bayshore HR — Password Reset Request";
+  const html = `<div style="font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+    <div style="border-bottom: 2px solid #f97316; padding-bottom: 16px; margin-bottom: 20px;">
+      <h2 style="color: #0f172a; margin: 0; font-size: 20px; font-weight: 800;">Bayshore <span style="color: #f97316;">HR</span></h2>
+      <p style="color: #64748b; font-size: 12px; margin: 4px 0 0;">Unified HR &amp; Employee Attendance Portal</p>
+    </div>
+    <p style="color: #334155; font-size: 14px; line-height: 1.6;">Hello <strong>${escapeHtml(payload.name)}</strong>,</p>
+    <p style="color: #334155; font-size: 14px; line-height: 1.6;">We received a request to reset your Bayshore HR account password. Click the button below to choose a new password:</p>
+    <div style="margin: 28px 0; text-align: center;">
+      <a href="${payload.resetUrl}" style="background-color: #f97316; color: #ffffff; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);">Reset My Password</a>
+    </div>
+    <p style="color: #64748b; font-size: 12px; line-height: 1.6;">If the button does not work, copy and paste this link into your browser:<br/><a href="${payload.resetUrl}" style="color: #f97316; word-break: break-all;">${payload.resetUrl}</a></p>
+    <p style="color: #94a3b8; font-size: 11px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">This reset link will expire in 1 hour. If you did not request a password reset, you can safely ignore this email.</p>
+  </div>`;
+  const text = `Hello ${payload.name},\n\nWe received a request to reset your Bayshore HR password.\n\nPlease visit the link below to choose a new password:\n${payload.resetUrl}\n\nThis link is valid for 1 hour. If you did not request this, please ignore this email.\n\n— Bayshore HR Team`;
+
+  if (smtp) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtp.host,
+        port: smtp.port,
+        secure: smtp.secure,
+        auth: { user: smtp.user, pass: smtp.pass },
+      });
+
+      const headers = buildSenderHeaders({
+        authUser: smtp.user,
+        senderEmail: smtp.senderEmail || smtp.user,
+        fromName: smtp.fromName || "Bayshore HR",
+      });
+
+      await transporter.sendMail({
+        from: headers.from,
+        replyTo: headers.replyTo,
+        to: payload.to,
+        subject,
+        text,
+        html,
+      });
+
+      return {
+        delivered: true,
+        mode: "smtp",
+        resetUrl: payload.resetUrl,
+        message: `Password reset email sent to ${payload.to}.`,
+      };
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "SMTP transport failure";
+      return {
+        delivered: false,
+        mode: "direct-link",
+        resetUrl: payload.resetUrl,
+        message: `Password reset link created, but email delivery failed (${errorMsg}).`,
+      };
+    }
+  }
+
+  try {
+    const testAccount = await nodemailer.createTestAccount();
+    const ethTransporter = nodemailer.createTransport({
+      host: testAccount.smtp.host,
+      port: testAccount.smtp.port,
+      secure: testAccount.smtp.secure,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+
+    const info = await ethTransporter.sendMail({
+      from: `"Bayshore HR" <no-reply@bayshore.com>`,
+      to: payload.to,
+      subject,
+      text,
+      html,
+    });
+
+    const previewUrl = nodemailer.getTestMessageUrl(info) || undefined;
+    return {
+      delivered: false,
+      mode: "ethereal",
+      previewUrl,
+      resetUrl: payload.resetUrl,
+      message: `Password reset email created (sandbox preview). Check your inbox or preview URL.`,
+    };
+  } catch {
+    return {
+      delivered: false,
+      mode: "direct-link",
+      resetUrl: payload.resetUrl,
+      message: `Password reset link generated successfully.`,
+    };
+  }
+}
