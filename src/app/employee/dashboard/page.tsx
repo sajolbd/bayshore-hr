@@ -196,15 +196,22 @@ export default function EmployeeDashboardPage() {
                   </Button>
                 </>
               ) : (
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => setIsClockInModalOpen(true)}
-                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 text-white font-bold px-6 py-3 gap-2"
-                >
-                  <MapPin className="h-5 w-5" />
-                  Clock In
-                </Button>
+                <div className="flex flex-col items-stretch sm:items-end gap-1.5 w-full sm:w-auto">
+                  {todayCheckOutTime && (
+                    <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 text-center sm:text-right">
+                      ⚠ Clocked out at {todayCheckOutTime}. Re-clock-in will override.
+                    </p>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={() => setIsClockInModalOpen(true)}
+                    className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 text-white font-bold px-6 py-3 gap-2"
+                  >
+                    <MapPin className="h-5 w-5" />
+                    {todayCheckOutTime ? "Re-Clock In" : "Clock In"}
+                  </Button>
+                </div>
               )}
             </div>
           </div>

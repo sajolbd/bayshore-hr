@@ -91,6 +91,10 @@ export async function PATCH(request: NextRequest) {
       phone?: unknown;
       location?: unknown;
       bloodGroup?: unknown;
+      dateOfBirth?: unknown;
+      nidOrPassport?: unknown;
+      skills?: unknown;
+      education?: unknown;
       emergencyContact?: {
         name?: unknown;
         relationship?: unknown;
@@ -148,6 +152,34 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: "Invalid blood group value." }, { status: 400 });
       }
       user.bloodGroup = body.bloodGroup.trim();
+    }
+    if (body.dateOfBirth !== undefined) {
+      if (typeof body.dateOfBirth !== "string") {
+        return NextResponse.json({ error: "Invalid date of birth value." }, { status: 400 });
+      }
+      user.dateOfBirth = body.dateOfBirth.trim();
+    }
+    if (body.nidOrPassport !== undefined) {
+      if (typeof body.nidOrPassport !== "string") {
+        return NextResponse.json({ error: "Invalid NID/Passport value." }, { status: 400 });
+      }
+      user.nidOrPassport = body.nidOrPassport.trim();
+    }
+    if (body.skills !== undefined) {
+      if (!Array.isArray(body.skills) || body.skills.some((s) => typeof s !== "string")) {
+        return NextResponse.json({ error: "Invalid skills value." }, { status: 400 });
+      }
+      user.skills = (body.skills as string[]).map((s) => s.trim()).filter(Boolean);
+    }
+    if (body.education !== undefined) {
+      if (!Array.isArray(body.education)) {
+        return NextResponse.json({ error: "Invalid education value." }, { status: 400 });
+      }
+      user.education = (body.education as Array<{ degree?: string; institution?: string; year?: string }>).map((e) => ({
+        degree: typeof e.degree === "string" ? e.degree.trim() : "",
+        institution: typeof e.institution === "string" ? e.institution.trim() : "",
+        year: typeof e.year === "string" ? e.year.trim() : "",
+      }));
     }
     if (body.emergencyContact !== undefined) {
       if (

@@ -156,9 +156,7 @@ export async function POST(request: NextRequest) {
         },
       },
       { upsert: true, new: true }
-    );
-
-    await ActivityLogModel.create({
+    );    await ActivityLogModel.create({
       user: session.name,
       avatar: session.avatar,
       action:
