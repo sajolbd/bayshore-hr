@@ -174,7 +174,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
         latitude: 23.7656,
         longitude: 90.4378,
         accuracy: 8,
-        address: "Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
+        address: "House - 21, Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
         geofenceStatus: "Inside Office Geofence",
         distanceFromHQ: 12,
         selfieUrl: profile.avatar,

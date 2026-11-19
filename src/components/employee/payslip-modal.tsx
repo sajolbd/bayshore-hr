@@ -85,7 +85,7 @@ export function PayslipModal({ payslip, open, onClose }: PayslipModalProps) {
                   Bayshore Communication Ltd.
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Level 2, Road 1, Block A, Abtab Nagar, Dhaka-1212, Bangladesh
+                  House - 21, Level 2, Road 1, Block A, Abtab Nagar, Dhaka-1212, Bangladesh
                 </p>
                 <p className="text-[11px] text-slate-400">
                   Trade License: TRAD/DNCC/024891/2024 • TIN: 482910492810

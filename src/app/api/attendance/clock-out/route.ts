@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           latitude: BAYSHORE_HQ.latitude,
           longitude: BAYSHORE_HQ.longitude,
           accuracy: 10,
-          address: "Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
+          address: "House - 21, Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
           geofenceStatus: "Inside Office Geofence",
           distanceFromHQ: 0,
           ipAddress: clientIp,

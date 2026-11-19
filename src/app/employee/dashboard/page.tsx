@@ -83,7 +83,7 @@ export default function EmployeeDashboardPage() {
               </Badge>
             </div>
             <p className="text-sm text-slate-500 mt-1">
-              Sunday, November 08, 2026 • Level 2, Road 1, Block A, Abtab Nagar
+              Sunday, November 08, 2026 • House - 21, Level 2, Road 1, Block A, Abtab Nagar
             </p>
           </div>
         </div>

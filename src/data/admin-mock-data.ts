@@ -146,7 +146,7 @@ export const initialSystemSettings: SystemSettings = {
   defaultCurrency: "BDT (৳)",
   timezone: "Asia/Dhaka (GMT+6)",
   headOfficeAddress:
-    "Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
+    "House - 21, Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
   workingDays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
   workingHours: "09:30 AM - 06:30 PM (Sun-Thu)",
   twoFactorMandatory: true,
