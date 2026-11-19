@@ -83,7 +83,7 @@ const UserSchema = new Schema<IUser>(
     department: { type: String, required: true, default: "Engineering" },
     designation: { type: String, required: true, default: "Team Member" },
     phone: { type: String, default: "" },
-    location: { type: String, default: "Gulshan HQ, Dhaka" },
+    location: { type: String, default: "Abtab Nagar HQ, Dhaka" },
     joinDate: { type: String, default: () => new Date().toISOString().slice(0, 10) },
     salary: { type: Number, default: 60000 },
     officeInTime: { type: String, default: "09:00" },

@@ -97,12 +97,12 @@ export async function POST(request: NextRequest) {
         scheduledOutTime,
         status: "Present",
         workHours: "8h 00m",
-        location: "Gulshan HQ",
+        location: "Abtab Nagar HQ",
         geo: {
           latitude: BAYSHORE_HQ.latitude,
           longitude: BAYSHORE_HQ.longitude,
           accuracy: 10,
-          address: "Bayshore Tower, Plot 14, Road 46, Gulshan-2, Dhaka 1212",
+          address: "Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
           geofenceStatus: "Inside Office Geofence",
           distanceFromHQ: 0,
           ipAddress: clientIp,
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
             checkOut: timeLabel,
             checkOutAt: now,
             workHours,
-            clockOutLocation: "Gulshan HQ",
+            clockOutLocation: "Abtab Nagar HQ",
           },
         },
         { new: true }
@@ -149,10 +149,10 @@ export async function POST(request: NextRequest) {
       user: session.name,
       avatar: session.avatar,
       action: "clocked out after shift duration of",
-      target: `${workHours} (Location: ${safeRec.location || "Gulshan HQ"})`,
+      target: `${workHours} (Location: ${safeRec.location || "Abtab Nagar HQ"})`,
       type: "onboarding",
       ipAddress: clientIp,
-      location: safeRec.location || "Gulshan HQ",
+      location: safeRec.location || "Abtab Nagar HQ",
     });
 
     const recScheduledIn = normalizeTime24h(

@@ -15,7 +15,7 @@ const shiftTemplates = [
     name: "General HQ Shift",
     window: "09:00 AM – 06:00 PM",
     breakTime: "01:00 PM – 02:00 PM",
-    location: "Gulshan-2 HQ",
+    location: "Abtab Nagar HQ",
     assignedCount: 162,
   },
   {
@@ -23,7 +23,7 @@ const shiftTemplates = [
     name: "Tech Operations Shift",
     window: "10:00 AM – 07:00 PM",
     breakTime: "01:30 PM – 02:30 PM",
-    location: "Gulshan HQ (Office)",
+    location: "Abtab Nagar HQ (Office)",
     assignedCount: 58,
   },
   {

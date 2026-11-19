@@ -294,7 +294,7 @@ export default function EmployeeProfilePage() {
               </div>
               <div className="py-2 flex justify-between">
                 <span className="text-slate-500">Work Model:</span>
-                <span className="font-semibold text-slate-800">100% Onsite (Gulshan HQ)</span>
+                <span className="font-semibold text-slate-800">100% Onsite (Abtab Nagar HQ)</span>
               </div>
               <div className="py-2 flex justify-between">
                 <span className="text-slate-500">Office Hours:</span>

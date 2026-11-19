@@ -97,7 +97,7 @@ export default function AttendancePage() {
           </div>
           <p className="text-2xl font-extrabold text-slate-900 mt-2">100%</p>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            All employees 100% onsite at Gulshan HQ
+            All employees 100% onsite at Abtab Nagar HQ
           </p>
         </Card>
       </div>

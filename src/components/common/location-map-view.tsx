@@ -14,13 +14,13 @@ interface LocationMapViewProps {
 
 export function LocationMapView({
   geo,
-  fallbackLocation = "Gulshan HQ",
+  fallbackLocation = "Abtab Nagar HQ",
   className = "",
   compact = false,
 }: LocationMapViewProps) {
-  // Default to Gulshan-2, Dhaka if no GPS coordinates provided
-  const lat = geo?.latitude ?? 23.7925;
-  const lng = geo?.longitude ?? 90.4078;
+  // Default to Abtab Nagar HQ, Dhaka if no GPS coordinates provided
+  const lat = geo?.latitude ?? 23.7656;
+  const lng = geo?.longitude ?? 90.4378;
   const address = geo?.address ?? fallbackLocation;
   const geofence = geo?.geofenceStatus ?? "Inside Office Geofence";
   const accuracy = geo?.accuracy ?? 10;

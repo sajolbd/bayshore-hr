@@ -13,7 +13,7 @@ const announcementsData = [
     publishedDate: "Nov 06, 2026",
     publisher: "Sarah Jenkins (Chief People Officer)",
     content:
-      "Join our CEO and Executive leadership team at the Gulshan 2 corporate auditorium or via our live stream bridge on Wednesday, Nov 11 at 4:00 PM. We will share Q3 business results, preview 2027 strategic initiatives, and present the Quarterly Employee Excellence recognitions.",
+      "Join our CEO and Executive leadership team at the Abtab Nagar corporate auditorium or via our live stream bridge on Wednesday, Nov 11 at 4:00 PM. We will share Q3 business results, preview 2027 strategic initiatives, and present the Quarterly Employee Excellence recognitions.",
     urgent: true,
   },
   {
@@ -28,7 +28,7 @@ const announcementsData = [
   },
   {
     id: "ann-03",
-    title: "Biometric Terminal Upgrade at Level 11 Gulshan HQ",
+    title: "Biometric Terminal Upgrade at Abtab Nagar HQ",
     category: "Facilities",
     publishedDate: "Nov 02, 2026",
     publisher: "IT & Infrastructure Security",

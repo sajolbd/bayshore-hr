@@ -62,7 +62,7 @@ export function AddEmployeeModal() {
     role: "",
     department: "Engineering" as Department,
     salary: "65000",
-    location: "Gulshan HQ, Dhaka",
+    location: "Abtab Nagar HQ, Dhaka",
     joinDate: new Date().toISOString().slice(0, 10),
     officeInTime: DEFAULT_OFFICE_IN_TIME,
     officeOutTime: DEFAULT_OFFICE_OUT_TIME,
@@ -100,7 +100,7 @@ export function AddEmployeeModal() {
       role: "",
       department: departmentOptions[0] || "Engineering",
       salary: "65000",
-      location: "Gulshan HQ, Dhaka",
+      location: "Abtab Nagar HQ, Dhaka",
       joinDate: new Date().toISOString().slice(0, 10),
       officeInTime: DEFAULT_OFFICE_IN_TIME,
       officeOutTime: DEFAULT_OFFICE_OUT_TIME,
@@ -490,7 +490,7 @@ export function AddEmployeeModal() {
               </label>
               <Input
                 icon={<MapPin className="h-4 w-4" />}
-                placeholder="e.g. Gulshan HQ, Dhaka"
+                placeholder="e.g. Abtab Nagar HQ, Dhaka"
                 value={formData.location}
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })

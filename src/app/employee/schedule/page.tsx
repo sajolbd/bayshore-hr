@@ -17,7 +17,7 @@ const weeklyScheduleData = [
     shiftName: "General Engineering Hybrid Shift",
     timing: "09:30 AM – 06:30 PM",
     breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Gulshan HQ (Office)",
+    location: "Abtab Nagar HQ (Office)",
     status: "Working Day",
     isToday: true,
   },
@@ -27,7 +27,7 @@ const weeklyScheduleData = [
     shiftName: "General Engineering Hybrid Shift",
     timing: "09:30 AM – 06:30 PM",
     breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Gulshan HQ (Office)",
+    location: "Abtab Nagar HQ (Office)",
     status: "Working Day",
   },
   {
@@ -36,7 +36,7 @@ const weeklyScheduleData = [
     shiftName: "Core Engineering Onsite Shift",
     timing: "09:30 AM – 06:30 PM",
     breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Gulshan HQ (Office)",
+    location: "Abtab Nagar HQ (Office)",
     status: "Working Day",
   },
   {
@@ -45,7 +45,7 @@ const weeklyScheduleData = [
     shiftName: "General Engineering Onsite Shift",
     timing: "09:30 AM – 06:30 PM",
     breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Gulshan HQ (Office)",
+    location: "Abtab Nagar HQ (Office)",
     status: "Working Day",
   },
   {
@@ -54,7 +54,7 @@ const weeklyScheduleData = [
     shiftName: "Core Engineering Onsite Shift",
     timing: "09:30 AM – 06:30 PM",
     breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Gulshan HQ (Office)",
+    location: "Abtab Nagar HQ (Office)",
     status: "Working Day",
   },
   {

@@ -273,7 +273,7 @@ export default function EmployeeSettingsPage() {
               <div>
                 <h3 className="text-base font-bold text-slate-900">Active Session & Sign Out</h3>
                 <p className="text-xs text-slate-500">
-                  Current authenticated device: Chrome on Linux (Gulshan HQ)
+                  Current authenticated device: Chrome on Linux (Abtab Nagar HQ)
                 </p>
               </div>
             </div>

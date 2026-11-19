@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         checkInType === "Field Check-In" && body.clientName?.trim()
           ? body.clientName.trim()
           : inOfficeGeofence
-          ? "Gulshan HQ"
+          ? "Abtab Nagar HQ"
           : resolvedAddress.split(",")[0]?.trim() ||
             `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     }

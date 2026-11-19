@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 
 export const BAYSHORE_HQ = {
-  latitude: 23.7925,
-  longitude: 90.4078,
+  latitude: 23.7656,
+  longitude: 90.4378,
   geofenceRadiusMeters: 500,
-  name: "Bayshore Tower, Gulshan-2, Dhaka",
+  name: "Abtab Nagar HQ, Dhaka",
 };
 
 export function calculateDistanceMeters(

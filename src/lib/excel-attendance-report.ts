@@ -195,7 +195,7 @@ export function buildMonthlyAttendanceReport(
           : "On Time",
         workHours: rec.workHours || "--",
         effectiveStatus,
-        location: rec.location || employee.location || "Gulshan HQ",
+        location: rec.location || employee.location || "Abtab Nagar HQ",
       };
     }
   );
@@ -619,7 +619,7 @@ export function generateEmployeeMonthlyAttendanceXlsx(
       { value: "-", styleIndex: 6 },
       { value: "-", styleIndex: 6 },
       { value: "-", styleIndex: 6 },
-      { value: employee.location || "Gulshan HQ", styleIndex: 6 },
+      { value: employee.location || "Abtab Nagar HQ", styleIndex: 6 },
     ]);
   } else {
     for (const r of rows) {
@@ -669,7 +669,7 @@ export function generateEmployeeMonthlyAttendanceXlsx(
       },
       { value: summary.totalWorkFormatted, styleIndex: 3 },
       { value: `Leave: ${summary.leaveDays}d`, styleIndex: 3 },
-      { value: employee.location || "Gulshan HQ", styleIndex: 3 },
+      { value: employee.location || "Abtab Nagar HQ", styleIndex: 3 },
     ]);
   }
 

@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       target: user.email,
       type: "policy",
       ipAddress: getClientIp(request),
-      location: "Gulshan HQ",
+      location: "Abtab Nagar HQ",
     });
 
     return NextResponse.json({

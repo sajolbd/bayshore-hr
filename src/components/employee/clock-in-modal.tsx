@@ -24,8 +24,8 @@ interface ClockInModalProps {
   onClose: () => void;
 }
 
-const BAYSHORE_HQ_LAT = 23.7925;
-const BAYSHORE_HQ_LNG = 90.4078;
+const BAYSHORE_HQ_LAT = 23.7656;
+const BAYSHORE_HQ_LNG = 90.4378;
 
 function calculateDistanceMeters(
   lat1: number,
@@ -102,7 +102,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
 
         let resolvedAddress = `${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`;
         let shortLoc = inGeofence
-          ? "Gulshan HQ"
+          ? "Abtab Nagar HQ"
           : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
         try {
@@ -169,12 +169,12 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
     setGpsError(null);
     setHasGpsFix(true);
     if (preset === "gulshan") {
-      setShortLocation("Gulshan HQ");
+      setShortLocation("Abtab Nagar HQ");
       setGeoData({
-        latitude: 23.7925,
-        longitude: 90.4078,
+        latitude: 23.7656,
+        longitude: 90.4378,
         accuracy: 8,
-        address: "Bayshore Tower, Plot 14, Road 46, Gulshan-2, Dhaka 1212",
+        address: "Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
         geofenceStatus: "Inside Office Geofence",
         distanceFromHQ: 12,
         selfieUrl: profile.avatar,
@@ -373,7 +373,7 @@ export function ClockInModal({ isOpen, onClose }: ClockInModalProps) {
               onClick={() => handleSelectPreset("gulshan")}
               className="px-2 py-0.5 rounded-md border border-slate-200 bg-white text-[11px] text-slate-700 hover:border-orange-500 hover:text-orange-600 transition-colors cursor-pointer"
             >
-              Gulshan HQ
+              Abtab Nagar HQ
             </button>
             <button
               type="button"

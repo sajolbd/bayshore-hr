@@ -117,7 +117,7 @@ export const initialAuditLogs: AuditLog[] = [
     adminAvatar:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
     action: "Synchronized biometric terminal logs with",
-    target: "Main Terminal A (Gulshan HQ)",
+    target: "Main Terminal A (Abtab Nagar HQ)",
     category: "Terminal Integration",
     ipAddress: "192.168.10.250",
     location: "Intranet HQ Server",
@@ -146,7 +146,7 @@ export const initialSystemSettings: SystemSettings = {
   defaultCurrency: "BDT (৳)",
   timezone: "Asia/Dhaka (GMT+6)",
   headOfficeAddress:
-    "Level 11, Bay's Bellavista, Road 11, Banani / Gulshan 2, Dhaka 1213",
+    "Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
   workingDays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
   workingHours: "09:30 AM - 06:30 PM (Sun-Thu)",
   twoFactorMandatory: true,

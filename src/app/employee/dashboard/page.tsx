@@ -83,7 +83,7 @@ export default function EmployeeDashboardPage() {
               </Badge>
             </div>
             <p className="text-sm text-slate-500 mt-1">
-              Sunday, November 08, 2026 • Level 11, Bay&apos;s Bellavista, Gulshan 2
+              Sunday, November 08, 2026 • Level 2, Road 1, Block A, Abtab Nagar
             </p>
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function EmployeeDashboardPage() {
                 <span className="truncate">
                   {isClockedIn && punchHistory[0]
                     ? `Clocked in from: ${punchHistory[0].geo?.address || punchHistory[0].location}`
-                    : `Assigned Workplace: ${profile.location || "Gulshan HQ"}`}
+                    : `Assigned Workplace: ${profile.location || "Abtab Nagar HQ"}`}
                 </span>
                 <span className="text-slate-300">•</span>
                 <span className="font-semibold text-orange-700">
@@ -490,7 +490,7 @@ export default function EmployeeDashboardPage() {
                 <span className="text-[10px] text-orange-700 font-semibold">Wednesday, 4:00 PM</span>
               </div>
               <p className="text-slate-600 leading-relaxed">
-                Join our CEO and Executive leadership team at the Gulshan 2 Auditorium or virtual bridge for Q4 company milestones and team recognitions.
+                Join our CEO and Executive leadership team at the Abtab Nagar Auditorium or virtual bridge for Q4 company milestones and team recognitions.
               </p>
             </div>
 

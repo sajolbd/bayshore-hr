@@ -38,7 +38,7 @@ async function runBootstrap(): Promise<void> {
       department: "Executive Leadership",
       designation: "Root Super Administrator",
       phone: "+880 1700-000001",
-      location: "Gulshan HQ, Dhaka",
+      location: "Abtab Nagar HQ, Dhaka",
       joinDate: "2024-01-01",
       salary: 0,
       avatar:

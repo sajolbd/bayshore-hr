@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     const designation = body.role?.trim();
     const department = body.department?.trim() || "Engineering";
     const salary = Number(body.salary) || 60000;
-    const location = body.location?.trim() || "Gulshan HQ, Dhaka";
+    const location = body.location?.trim() || "Abtab Nagar HQ, Dhaka";
     const joinDate =
       body.joinDate?.trim() || new Date().toISOString().slice(0, 10);
     const officeInTime = normalizeTime24h(

@@ -24,7 +24,7 @@ const upcomingEvents = [
     title: "Architecture Guild Bi-Weekly Sync",
     date: "Thursday, Nov 12, 2026",
     time: "02:00 PM – 03:00 PM",
-    location: "Meeting Room 4B, Gulshan HQ",
+    location: "Meeting Room 4B, Abtab Nagar HQ",
     category: "Technical",
     badgeColor: "bg-blue-100 text-blue-700",
   },

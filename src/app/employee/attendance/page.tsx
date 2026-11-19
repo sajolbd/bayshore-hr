@@ -173,7 +173,7 @@ export default function EmployeeAttendancePage() {
             <MapPin className="h-4 w-4 text-orange-600" />
           </div>
           <div className="text-lg font-bold text-slate-900 mt-2 truncate">
-            Gulshan HQ
+            Abtab Nagar HQ
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
             Terminal #BIO-GLS-11

@@ -107,7 +107,7 @@ export function DepartmentRosterModal({
                     </span>
                     <span className="flex items-center gap-1 mt-0.5">
                       <MapPin className="h-3 w-3 text-slate-400" />
-                      <span>{emp.location || "Gulshan HQ"}</span>
+                      <span>{emp.location || "Abtab Nagar HQ"}</span>
                     </span>
                   </div>
                 </div>
