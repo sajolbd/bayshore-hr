@@ -6,93 +6,113 @@ import {
   Calendar,
   Coffee,
   MapPin,
-  Info,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useEmployee } from "@/context/employee-context";
+import {
+  DEFAULT_OFFICE_IN_TIME,
+  DEFAULT_OFFICE_OUT_TIME,
+  formatTime12h,
+  normalizeTime24h,
+} from "@/lib/office-time";
 
-const weeklyScheduleData = [
-  {
-    day: "Sunday",
-    date: "Nov 08, 2026",
-    shiftName: "General Engineering Hybrid Shift",
-    timing: "09:30 AM – 06:30 PM",
-    breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Abtab Nagar HQ (Office)",
-    status: "Working Day",
-    isToday: true,
-  },
-  {
-    day: "Monday",
-    date: "Nov 09, 2026",
-    shiftName: "General Engineering Hybrid Shift",
-    timing: "09:30 AM – 06:30 PM",
-    breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Abtab Nagar HQ (Office)",
-    status: "Working Day",
-  },
-  {
-    day: "Tuesday",
-    date: "Nov 10, 2026",
-    shiftName: "Core Engineering Onsite Shift",
-    timing: "09:30 AM – 06:30 PM",
-    breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Abtab Nagar HQ (Office)",
-    status: "Working Day",
-  },
-  {
-    day: "Wednesday",
-    date: "Nov 11, 2026",
-    shiftName: "General Engineering Onsite Shift",
-    timing: "09:30 AM – 06:30 PM",
-    breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Abtab Nagar HQ (Office)",
-    status: "Working Day",
-  },
-  {
-    day: "Thursday",
-    date: "Nov 12, 2026",
-    shiftName: "Core Engineering Onsite Shift",
-    timing: "09:30 AM – 06:30 PM",
-    breakTime: "01:15 PM – 02:15 PM (Lunch & Prayer)",
-    location: "Abtab Nagar HQ (Office)",
-    status: "Working Day",
-  },
-  {
-    day: "Friday",
-    date: "Nov 13, 2026",
-    shiftName: "Weekly Weekend",
-    timing: "Off Duty",
-    breakTime: "--",
-    location: "Off Duty",
-    status: "Weekly Holiday",
-  },
-  {
-    day: "Saturday",
-    date: "Nov 14, 2026",
-    shiftName: "Weekly Weekend",
-    timing: "Off Duty",
-    breakTime: "--",
-    location: "Off Duty",
-    status: "Weekly Holiday",
-  },
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ];
 
+interface ScheduleRow {
+  day: string;
+  date: string;
+  dateLabel: string;
+  timing: string;
+  status: "Working Day" | "Weekly Holiday" | "Holiday";
+  holidayName?: string;
+  isToday: boolean;
+}
+
 export default function EmployeeSchedulePage() {
+  const { profile, officeHolidays } = useEmployee();
+
+  const [today] = React.useState(() => new Date());
+
+  const officeIn = normalizeTime24h(profile.officeInTime, DEFAULT_OFFICE_IN_TIME);
+  const officeOut = normalizeTime24h(profile.officeOutTime, DEFAULT_OFFICE_OUT_TIME);
+  const officeInLabel = formatTime12h(officeIn, "09:00 AM");
+  const officeOutLabel = formatTime12h(officeOut, "06:00 PM");
+  const shiftLabel = `${officeInLabel} – ${officeOutLabel}`;
+
+  const todayKey = today.toLocaleDateString("en-CA");
+
+  // Start of the current week (Sunday), Asia/Dhaka style keys. Layout is
+  // Sun→Sat with Friday & Saturday as the weekly weekend.
+  const weekStart = React.useMemo(() => {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    d.setDate(d.getDate() - d.getDay());
+    return d;
+  }, [today]);
+
+  const weeklyScheduleData = React.useMemo<ScheduleRow[]>(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const dayDate = new Date(weekStart);
+      dayDate.setDate(weekStart.getDate() + i);
+      const dow = dayDate.getDay();
+      const dayKey = dayDate.toLocaleDateString("en-CA");
+
+      const holiday = officeHolidays.find((h) => {
+        const parsed = new Date(h.date);
+        if (Number.isNaN(parsed.getTime())) return false;
+        return parsed.toLocaleDateString("en-CA") === dayKey;
+      });
+
+      const isWeekend = dow === 5 || dow === 6;
+
+      return {
+        day: DAY_NAMES[dow],
+        date: dayKey,
+        dateLabel: dayDate.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        timing: holiday || isWeekend ? "Off Duty" : shiftLabel,
+        status: holiday ? "Holiday" : isWeekend ? "Weekly Holiday" : "Working Day",
+        holidayName: holiday?.name,
+        isToday: dayKey === todayKey,
+      };
+    });
+  }, [weekStart, officeHolidays, shiftLabel, todayKey]);
+
+  const nextHoliday = React.useMemo(() => {
+    const upcoming = officeHolidays
+      .map((h) => ({ h, parsed: new Date(h.date) }))
+      .filter((x) => !Number.isNaN(x.parsed.getTime()) && x.parsed.getTime() >= today.setHours(0, 0, 0, 0))
+      .sort((a, b) => a.parsed.getTime() - b.parsed.getTime());
+    return upcoming[0] ?? null;
+  }, [officeHolidays, today]);
+
+  const weeklyWorkingHours = `40 Hours / Week`;
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-            My Work Schedule & Assigned Shifts
+            My Work Schedule &amp; Assigned Shifts
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Weekly roster, hybrid work rotation, break allocations, and official weekly holidays.
+            Weekly roster, shift timings, break allocations, and official weekly holidays.
           </p>
         </div>
 
         <Badge variant="warning" className="px-3 py-1 text-xs">
-          Shift: General Engineering (09:30 AM – 06:30 PM)
+          Shift: {officeInLabel} – {officeOutLabel}
         </Badge>
       </div>
 
@@ -104,7 +124,7 @@ export default function EmployeeSchedulePage() {
           </div>
           <div>
             <span className="text-xs text-slate-500 block">Weekly Working Hours</span>
-            <span className="text-xl font-bold text-slate-900">40 Hours / Week</span>
+            <span className="text-xl font-bold text-slate-900">{weeklyWorkingHours}</span>
             <span className="text-[11px] text-slate-400 block">8 hrs/day net working time</span>
           </div>
         </div>
@@ -116,7 +136,7 @@ export default function EmployeeSchedulePage() {
           <div>
             <span className="text-xs text-slate-500 block">Designated Meal Break</span>
             <span className="text-xl font-bold text-slate-900">1 Hour Daily</span>
-            <span className="text-[11px] text-slate-400 block">01:15 PM – 02:15 PM (Level 11 Cafe)</span>
+            <span className="text-[11px] text-slate-400 block">1:15 PM – 2:15 PM (Lunch &amp; Prayer)</span>
           </div>
         </div>
 
@@ -126,7 +146,7 @@ export default function EmployeeSchedulePage() {
           </div>
           <div>
             <span className="text-xs text-slate-500 block">Weekly Weekend</span>
-            <span className="text-xl font-bold text-slate-900">Friday & Saturday</span>
+            <span className="text-xl font-bold text-slate-900">Friday &amp; Saturday</span>
             <span className="text-[11px] text-slate-400 block">Standard Bangladesh 5-Day Week</span>
           </div>
         </div>
@@ -136,7 +156,7 @@ export default function EmployeeSchedulePage() {
       <div className="rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
         <div className="p-4 sm:px-6 border-b border-slate-100 flex items-center justify-between">
           <h3 className="text-base font-bold text-slate-900">
-            Weekly Schedule Roster (Nov 08 – Nov 14, 2026)
+            Weekly Schedule Roster ({weeklyScheduleData[0].dateLabel} – {weeklyScheduleData[6].dateLabel})
           </h3>
           <span className="text-xs font-semibold text-slate-500">Current Week</span>
         </div>
@@ -144,13 +164,13 @@ export default function EmployeeSchedulePage() {
         <div className="divide-y divide-slate-100">
           {weeklyScheduleData.map((item) => (
             <div
-              key={item.day}
+              key={item.date}
               className={`p-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-colors ${
                 item.isToday
                   ? "bg-orange-50/40 border-l-4 border-l-orange-600"
-                  : item.status === "Weekly Holiday"
-                  ? "bg-slate-50/60"
-                  : "hover:bg-slate-50/50"
+                  : item.status === "Working Day"
+                  ? "hover:bg-slate-50/50"
+                  : "bg-slate-50/60"
               }`}
             >
               <div className="flex items-center gap-4 min-w-48">
@@ -158,45 +178,53 @@ export default function EmployeeSchedulePage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-slate-900">{item.day}</span>
                     {item.isToday && (
-                      <span className="rounded-full bg-orange-600 px-2 py-0.2 text-[10px] font-bold text-white">
+                      <span className="rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-bold text-white">
                         Today
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-slate-500 block">{item.date}</span>
+                  <span className="text-xs text-slate-500 block">{item.dateLabel}</span>
                 </div>
               </div>
 
               <div className="flex-1 text-xs space-y-0.5">
-                <span className="font-semibold text-slate-800 block">{item.shiftName}</span>
+                <span className="font-semibold text-slate-800 block">
+                  {item.holidayName
+                    ? item.holidayName
+                    : item.status === "Weekly Holiday"
+                    ? "Weekly Weekend"
+                    : "General Office Shift"}
+                </span>
                 <div className="flex items-center gap-3 text-slate-500 flex-wrap">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5 text-slate-400" />
                     {item.timing}
                   </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <Coffee className="h-3.5 w-3.5 text-slate-400" />
-                    Break: {item.breakTime}
-                  </span>
+                  {item.status === "Working Day" && (
+                    <>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Coffee className="h-3.5 w-3.5 text-slate-400" />
+                        Break: 01:15 PM – 02:15 PM
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
-                <span className="text-xs text-slate-600 hidden md:inline-flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-slate-400" />
-                  {item.location}
-                </span>
+                {item.status === "Working Day" && (
+                  <span className="text-xs text-slate-600 hidden md:inline-flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-slate-400" />
+                    Office
+                  </span>
+                )}
 
                 <Badge
-                  variant={
-                    item.status === "Working Day"
-                      ? "success"
-                      : "neutral"
-                  }
+                  variant={item.status === "Working Day" ? "success" : "neutral"}
                   className="text-[10px]"
                 >
-                  {item.status}
+                  {item.status === "Holiday" ? "Public Holiday" : item.status}
                 </Badge>
               </div>
             </div>
@@ -204,17 +232,22 @@ export default function EmployeeSchedulePage() {
         </div>
       </div>
 
-      {/* Upcoming Schedule Changes Notice */}
-      <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-5 shadow-xs flex items-start gap-3.5">
-        <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-        <div className="text-xs space-y-1">
-          <strong className="text-blue-900 text-sm block">Upcoming Shift & Schedule Notice</strong>
-          <p className="text-blue-800/90 leading-relaxed">
-            During the upcoming <strong>Victory Day (Dec 16)</strong> week, Bayshore Communication will observe a public holiday.
-            Any on-call engineer rota for cloud infrastructure will receive statutory 2.0x overtime allowance.
-          </p>
+      {/* Upcoming Holiday Notice */}
+      {nextHoliday && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-5 shadow-xs flex items-start gap-3.5">
+          <Calendar className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-1">
+            <strong className="text-blue-900 text-sm block">Upcoming Holiday Notice</strong>
+            <p className="text-blue-800/90 leading-relaxed">
+              The office will remain closed for <strong>{nextHoliday.h.name}</strong> on{" "}
+              <strong>
+                {nextHoliday.h.day}, {nextHoliday.h.date}
+              </strong>
+              . Any on-call rota for core infrastructure will receive statutory 2.0x overtime allowance.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

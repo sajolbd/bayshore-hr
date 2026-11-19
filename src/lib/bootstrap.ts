@@ -3,7 +3,15 @@ import { connectToDatabase } from "./mongodb";
 import { UserModel } from "@/models/User";
 import { LeavePolicyModel } from "@/models/LeavePolicy";
 import { HolidayModel } from "@/models/Holiday";
-import { companyHolidaysList } from "@/data/employee-mock-data";
+
+/** Seed holiday calendar for a fresh database. */
+const SEED_HOLIDAYS: Array<{ name: string; date: string; day: string; type: string }> = [
+  { name: "Victory Day (বিজয় দিবস)", date: "Dec 16, 2026", day: "Wednesday", type: "National Holiday" },
+  { name: "Christmas Day", date: "Dec 25, 2026", day: "Friday", type: "Gazetted Holiday" },
+  { name: "New Year's Day", date: "Jan 01, 2027", day: "Friday", type: "Company Holiday" },
+  { name: "International Mother Language Day (শহীদ দিবস)", date: "Feb 21, 2027", day: "Sunday", type: "National Holiday" },
+  { name: "Independence Day (স্বাধীনতা দিবস)", date: "Mar 26, 2027", day: "Friday", type: "National Holiday" },
+];
 
 let bootstrapPromise: Promise<void> | null = null;
 let bootstrapped = false;
@@ -69,14 +77,7 @@ async function runBootstrap(): Promise<void> {
 
   const holidayCount = await HolidayModel.countDocuments();
   if (holidayCount === 0) {
-    await HolidayModel.insertMany(
-      companyHolidaysList.map((h) => ({
-        name: h.name,
-        date: h.date,
-        day: h.day,
-        type: h.type,
-      }))
-    );
+    await HolidayModel.insertMany(SEED_HOLIDAYS);
   }
 }
 

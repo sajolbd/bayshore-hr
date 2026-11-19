@@ -20,6 +20,7 @@ export interface Employee {
   salary: number;
   officeInTime?: string;
   officeOutTime?: string;
+  dateOfBirth?: string;
   inviteSentAt?: string;
 }
 
@@ -131,6 +132,16 @@ export interface AnnouncementItem {
   author: string;
   authorAvatar: string;
   isImportant?: boolean;
+}
+
+export interface CompanyDocumentItem {
+  id: string;
+  title: string;
+  category: string;
+  visibility: "All Employees" | "HR & Admins Only";
+  fileUrl: string;
+  fileSize: string;
+  updatedAt: string;
 }
 
 export interface KPICardData {

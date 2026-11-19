@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { useHRMS } from "@/context/hrms-context";
 import { AnnualLeavePolicyItem } from "@/types";
 import { SlidersHorizontal, Check, RotateCcw } from "lucide-react";
-import { initialAnnualLeavePolicies } from "@/data/mock-data";
 
 interface LeavePolicyModalProps {
   open: boolean;
@@ -45,7 +44,7 @@ function LeavePolicyForm({ onClose }: { onClose: () => void }) {
   );
 
   const handleResetDefaults = () => {
-    setDraftPolicies(initialAnnualLeavePolicies);
+    setDraftPolicies(annualLeavePolicies);
   };
 
   const handleSave = (e: React.FormEvent) => {

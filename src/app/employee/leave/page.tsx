@@ -41,7 +41,7 @@ export default function EmployeeLeavePage() {
       {/* Leave Balance Quota */}
       <div>
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-          Annual Leave Entitlement (2026 Cycle)
+          Annual Leave Entitlement ({new Date().getFullYear()} Cycle)
         </h2>
         <div className="grid grid-cols-1 gap-4">
           {leaveBalances.map((item) => {

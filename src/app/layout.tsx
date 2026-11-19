@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 
@@ -19,7 +20,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full bg-slate-50">
       <body className="min-h-full flex flex-col text-slate-900 bg-slate-50 antialiased font-sans selection:bg-orange-100 selection:text-orange-900">
-        <AppShell>{children}</AppShell>
+        <Suspense
+          fallback={
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+            </div>
+          }
+        >
+          <AppShell>{children}</AppShell>
+        </Suspense>
       </body>
     </html>
   );

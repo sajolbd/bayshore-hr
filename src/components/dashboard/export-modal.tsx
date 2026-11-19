@@ -34,8 +34,24 @@ export function ExportModal() {
   } = useHRMS();
 
   const [format, setFormat] = React.useState<"csv" | "xlsx" | "pdf">("csv");
-  const [dateRange, setDateRange] = React.useState("November 2026");
+  const [dateRange, setDateRange] = React.useState(() => {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return prev.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  });
   const [isDownloading, setIsDownloading] = React.useState(false);
+
+  const dateRangeOptions = React.useMemo(() => {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevLabel = prev.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+    const quarter = `Q${Math.floor(now.getMonth() / 3) + 1} ${now.getFullYear()}`;
+    const ytd = `Year to Date (${now.getFullYear()})`;
+    return [prevLabel, quarter, ytd];
+  }, []);
 
   const [modules, setModules] = React.useState({
     attendance: true,
@@ -205,7 +221,7 @@ export function ExportModal() {
             Timeframe Period
           </label>
           <div className="grid grid-cols-3 gap-2">
-            {["November 2026", "Q4 2026", "Year to Date (2026)"].map((range) => (
+            {dateRangeOptions.map((range) => (
               <button
                 key={range}
                 type="button"

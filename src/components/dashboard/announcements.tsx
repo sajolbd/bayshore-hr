@@ -5,11 +5,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { useHRMS } from "@/context/hrms-context";
-import { Megaphone, Pin, Calendar, ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { Megaphone, Pin, Calendar, ArrowRight, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export function Announcements() {
-  const { announcements } = useHRMS();
+  const { announcements, deleteAnnouncement } = useHRMS();
+  const { currentRole } = useAuth();
+  const isAdmin = currentRole !== "Employee";
 
   const getCategoryBadge = (category: string) => {
     switch (category) {
@@ -46,10 +49,19 @@ export function Announcements() {
       </CardHeader>
 
       <CardContent className="p-4 flex-1 space-y-3.5">
+        {announcements.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-8 text-center rounded-lg border border-dashed border-slate-200">
+            <Megaphone className="h-5 w-5 text-slate-300 mb-2" />
+            <p className="text-sm font-medium text-slate-500">No announcements yet</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Published bulletins will appear here.
+            </p>
+          </div>
+        )}
         {announcements.map((item) => (
           <div
             key={item.id}
-            className="p-3.5 rounded-xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-xs transition-all relative"
+            className="group p-3.5 rounded-xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-xs transition-all relative"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -84,6 +96,16 @@ export function Announcements() {
               <span className="text-[11px] font-medium text-slate-500">
                 Posted by <strong className="text-slate-800">{item.author}</strong>
               </span>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => deleteAnnouncement(item.id)}
+                  title="Take this bulletin down"
+                  className="ml-auto text-slate-300 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
         ))}

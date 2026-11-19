@@ -13,7 +13,13 @@ export function UpcomingInterviews() {
   const { interviews } = useHRMS();
   const { showToast } = useToast();
 
+  const scheduled = interviews.filter((iv) => iv.status === "Scheduled");
+
   const handleJoin = (candidateName: string, link: string) => {
+    if (!link) {
+      showToast("No Meeting Link", `No virtual room link saved for ${candidateName}.`, "info");
+      return;
+    }
     showToast(
       "Joining Interview Room",
       `Launching virtual session for ${candidateName}...`,
@@ -31,7 +37,7 @@ export function UpcomingInterviews() {
             <span>Upcoming Candidate Interviews</span>
           </CardTitle>
           <Badge variant="info">
-            {interviews.length} Scheduled
+            {scheduled.length} Scheduled
           </Badge>
         </div>
         <CardDescription>
@@ -40,7 +46,16 @@ export function UpcomingInterviews() {
       </CardHeader>
 
       <CardContent className="p-4 flex-1 space-y-3">
-        {interviews.map((item) => (
+        {scheduled.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-8 text-center rounded-lg border border-dashed border-slate-200">
+            <Video className="h-5 w-5 text-slate-300 mb-2" />
+            <p className="text-sm font-medium text-slate-500">No interviews scheduled</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Schedule one from the Recruitment page.
+            </p>
+          </div>
+        )}
+        {scheduled.map((item) => (
           <div
             key={item.id}
             className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-xs transition-all"

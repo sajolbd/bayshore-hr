@@ -19,8 +19,9 @@ export function AttendanceCorrectionModal({
 }: AttendanceCorrectionModalProps) {
   const { submitAttendanceCorrection } = useEmployee();
 
+  const today = new Date().toLocaleDateString("en-CA");
   const [formData, setFormData] = React.useState({
-    date: "2026-11-04",
+    date: today,
     punchType: "Check-in Punch",
     correctTime: "09:00 AM",
     reason: "",
@@ -50,7 +51,7 @@ export function AttendanceCorrectionModal({
         onClose();
         setSuccessMsg(null);
         setFormData({
-          date: "2026-11-04",
+          date: new Date().toLocaleDateString("en-CA"),
           punchType: "Check-in Punch",
           correctTime: "09:00 AM",
           reason: "",

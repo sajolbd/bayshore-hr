@@ -2,12 +2,15 @@
 
 import * as React from "react";
 import { Announcements } from "@/components/dashboard/announcements";
+import { ComposeAnnouncementModal } from "@/components/dashboard/compose-announcement-modal";
 import { Button } from "@/components/ui/button";
 import { Megaphone, Plus } from "lucide-react";
-import { useToast } from "@/context/toast-context";
+import { useAuth } from "@/context/auth-context";
 
 export default function AnnouncementsPage() {
-  const { showToast } = useToast();
+  const { currentRole } = useAuth();
+  const isAdmin = currentRole !== "Employee";
+  const [isComposeOpen, setIsComposeOpen] = React.useState(false);
 
   return (
     <div className="space-y-6">
@@ -20,20 +23,27 @@ export default function AnnouncementsPage() {
             Broadcast organizational updates, policy amendments, and executive memorandums.
           </p>
         </div>
-        <Button
-          onClick={() =>
-            showToast("Compose Notice", "Announcement editor opened.", "info")
-          }
-          className="gap-2 bg-orange-600 hover:bg-orange-700 text-white shadow-sm"
-        >
-          <Plus className="h-4 w-4" />
-          <span>New Bulletin</span>
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={() => setIsComposeOpen(true)}
+            className="gap-2 bg-orange-600 hover:bg-orange-700 text-white shadow-sm"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Bulletin</span>
+          </Button>
+        )}
       </div>
 
       <div className="w-full">
         <Announcements />
       </div>
+
+      {isAdmin && (
+        <ComposeAnnouncementModal
+          isOpen={isComposeOpen}
+          onClose={() => setIsComposeOpen(false)}
+        />
+      )}
     </div>
   );
 }

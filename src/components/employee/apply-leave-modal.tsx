@@ -13,8 +13,19 @@ interface ApplyLeaveModalProps {
   onClose: () => void;
 }
 
-function calculateInclusiveDays(start: string, end: string): number {
-  if (!start || !end) return 1;
+function defaultLeaveStartDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 2);
+  return d.toLocaleDateString("en-CA");
+}
+
+function defaultLeaveEndDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 4);
+  return d.toLocaleDateString("en-CA");
+}
+
+function calculateInclusiveDays(start: string, end: string): number {  if (!start || !end) return 1;
   const s = new Date(start);
   const e = new Date(end);
   if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e < s) return 1;
@@ -26,8 +37,8 @@ export function ApplyLeaveModal({ open, onClose }: ApplyLeaveModalProps) {
 
   const [formData, setFormData] = React.useState({
     type: "Annual Leave" as LeaveType,
-    startDate: "2026-11-20",
-    endDate: "2026-11-22",
+    startDate: defaultLeaveStartDate(),
+    endDate: defaultLeaveEndDate(),
     days: 3,
     reason: "",
   });
@@ -71,8 +82,8 @@ export function ApplyLeaveModal({ open, onClose }: ApplyLeaveModalProps) {
         setSuccessMsg(null);
         setFormData({
           type: "Annual Leave",
-          startDate: "2026-11-20",
-          endDate: "2026-11-22",
+          startDate: defaultLeaveStartDate(),
+          endDate: defaultLeaveEndDate(),
           days: 3,
           reason: "",
         });

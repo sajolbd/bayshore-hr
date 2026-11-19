@@ -2,9 +2,25 @@
 
 import * as React from "react";
 import { AdminRole, AdminUser, AuditLog, SystemSettings } from "@/types";
-import { initialSystemSettings } from "@/data/admin-mock-data";
 import { useAuth } from "./auth-context";
 import { useToast } from "./toast-context";
+
+/** Company configuration defaults; persisted changes live in the settings UI. */
+const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
+  companyLegalName: "Bayshore Communication",
+  companyTradeLicense: "",
+  tinNumber: "",
+  defaultCurrency: "BDT (৳)",
+  timezone: "Asia/Dhaka (GMT+6)",
+  headOfficeAddress:
+    "House - 21, Level 2, Road 1, Block A, Abtab Nagar, Dhaka 1212",
+  workingDays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+  workingHours: "09:30 AM - 06:30 PM (Sun-Thu)",
+  twoFactorMandatory: true,
+  sessionTimeoutMinutes: 30,
+  ipWhitelisting: true,
+  biometricSyncAuto: true,
+};
 
 interface AdminContextValue {
   adminUsers: AdminUser[];
@@ -30,7 +46,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [adminUsers, setAdminUsers] = React.useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = React.useState<AuditLog[]>([]);
   const [settings, setSettings] = React.useState<SystemSettings>(
-    initialSystemSettings
+    DEFAULT_SYSTEM_SETTINGS
   );
   const [simulatedRole, setSimulatedRole] = React.useState<AdminRole>("Super Admin");
   const [isAddAdminModalOpen, setIsAddAdminModalOpen] = React.useState(false);

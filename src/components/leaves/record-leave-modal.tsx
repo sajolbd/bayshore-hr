@@ -35,8 +35,18 @@ function RecordLeaveForm({
   const defaultEmpId = initialEmployeeId || employees[0]?.id || "EMP-1042";
   const [employeeId, setEmployeeId] = React.useState(defaultEmpId);
   const leaveType: LeaveType = "Annual Leave";
-  const [startDate, setStartDate] = React.useState("2026-11-15");
-  const [endDate, setEndDate] = React.useState("2026-11-16");
+  const defaultStartDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    return d.toLocaleDateString("en-CA");
+  };
+  const defaultEndDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 4);
+    return d.toLocaleDateString("en-CA");
+  };
+  const [startDate, setStartDate] = React.useState(defaultStartDate);
+  const [endDate, setEndDate] = React.useState(defaultEndDate);
   const [days, setDays] = React.useState(2);
   const [reason, setReason] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);

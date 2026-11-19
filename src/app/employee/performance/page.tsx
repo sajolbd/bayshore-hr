@@ -18,6 +18,14 @@ export default function EmployeePerformancePage() {
   const [selfNotes, setSelfNotes] = React.useState<string>("");
   const [savedSuccess, setSavedSuccess] = React.useState<string | null>(null);
 
+  const overallProgress = goals.length
+    ? Math.round(
+        goals.reduce((sum, goal) => sum + goal.progress, 0) / goals.length
+      )
+    : 0;
+  const inProgressCount = goals.filter((goal) => goal.status !== "Completed").length;
+  const completedCount = goals.filter((goal) => goal.status === "Completed").length;
+
   const handleStartEdit = (goalId: string) => {
     setEditingGoalId(goalId);
     setSelfNotes("");
@@ -39,9 +47,8 @@ export default function EmployeePerformancePage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              My Growth, OKRs & Performance
+              My Growth, OKRs &amp; Performance
             </h1>
-            <Badge variant="warning">Q4 2026 Cycle</Badge>
           </div>
           <p className="text-sm text-slate-500 mt-1">
             Track key results, self-assess milestones, review manager evaluations, and professional development.
@@ -53,7 +60,9 @@ export default function EmployeePerformancePage() {
             <span className="text-[11px] text-orange-700 font-semibold uppercase tracking-wider block">
               Overall OKR Score
             </span>
-            <span className="text-xl font-black text-orange-600">81.6%</span>
+            <span className="text-xl font-black text-orange-600">
+              {goals.length > 0 ? `${overallProgress}%` : "—"}
+            </span>
           </div>
         </div>
       </div>
@@ -61,27 +70,37 @@ export default function EmployeePerformancePage() {
       {/* KPI Performance Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <span className="text-xs text-slate-500 block font-medium">Architecture Delivery</span>
-          <div className="text-2xl font-bold text-slate-900 mt-2">94%</div>
-          <span className="text-[11px] text-emerald-600 font-medium mt-1 block">Exceeds Expectations</span>
+          <span className="text-xs text-slate-500 block font-medium">Assigned Goals</span>
+          <div className="text-2xl font-bold text-slate-900 mt-2">{goals.length}</div>
+          <span className="text-[11px] text-slate-400 font-medium mt-1 block">
+            {goals.length > 0 ? "Active cycle" : "No cycle configured"}
+          </span>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <span className="text-xs text-slate-500 block font-medium">Cloud System Uptime</span>
-          <div className="text-2xl font-bold text-slate-900 mt-2">99.98%</div>
-          <span className="text-[11px] text-emerald-600 font-medium mt-1 block">Target: 99.95%</span>
+          <span className="text-xs text-slate-500 block font-medium">In Progress</span>
+          <div className="text-2xl font-bold text-slate-900 mt-2">{inProgressCount}</div>
+          <span className="text-[11px] text-slate-400 font-medium mt-1 block">
+            {goals.length > 0 ? "Awaiting completion" : "—"}
+          </span>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <span className="text-xs text-slate-500 block font-medium">Code Review Turnaround</span>
-          <div className="text-2xl font-bold text-slate-900 mt-2">&lt; 2.5 hrs</div>
-          <span className="text-[11px] text-slate-400 mt-1 block">Top 5% in Engineering</span>
+          <span className="text-xs text-slate-500 block font-medium">Completed</span>
+          <div className="text-2xl font-bold text-emerald-600 mt-2">{completedCount}</div>
+          <span className="text-[11px] text-slate-400 font-medium mt-1 block">
+            {goals.length > 0 ? "Marked complete" : "—"}
+          </span>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <span className="text-xs text-slate-500 block font-medium">Last Review Rating</span>
-          <div className="text-2xl font-bold text-orange-600 mt-2">4.8 / 5.0</div>
-          <span className="text-[11px] text-slate-400 mt-1 block">Evaluated by Marcus Vance</span>
+          <span className="text-xs text-slate-500 block font-medium">Average Progress</span>
+          <div className="text-2xl font-bold text-orange-600 mt-2">
+            {goals.length > 0 ? `${overallProgress}%` : "—"}
+          </div>
+          <span className="text-[11px] text-slate-400 font-medium mt-1 block">
+            Across all assigned goals
+          </span>
         </div>
       </div>
 
@@ -97,7 +116,17 @@ export default function EmployeePerformancePage() {
         </div>
 
         <div className="space-y-4">
-          {goals.map((goal) => (
+          {goals.length === 0 ? (
+            <div className="py-10 text-center">
+              <p className="text-xs text-slate-500">
+                No OKR goals have been assigned to you yet.
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Once your manager assigns goals for the current review cycle, they will appear here with self-assessment fields.
+              </p>
+            </div>
+          ) : (
+            goals.map((goal) => (
             <div
               key={goal.id}
               className="rounded-xl border border-slate-200 p-4 bg-slate-50/40 space-y-3"
@@ -173,7 +202,7 @@ export default function EmployeePerformancePage() {
                     </span>
                   ) : (
                     <span className="text-[11px] text-slate-400">
-                      Last updated for Q4 evaluation review
+                      Track your deliverables for this goal
                     </span>
                   )}
                   <button
@@ -186,7 +215,8 @@ export default function EmployeePerformancePage() {
                 </div>
               )}
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
 
@@ -196,16 +226,15 @@ export default function EmployeePerformancePage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-3">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-orange-600" />
-            <h3 className="text-base font-bold text-slate-900">Latest Manager Feedback (Q3 Review)</h3>
+            <h3 className="text-base font-bold text-slate-900">Latest Manager Feedback</h3>
           </div>
-
-          <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100 text-xs text-slate-700 leading-relaxed italic">
-            &ldquo;Elena demonstrated extraordinary leadership during our multi-region Kubernetes migration. Her architectural designs for high-concurrency microservices ensured 99.98% reliability during peak load. Highly commendable mentorship of our junior cloud engineers.&rdquo;
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-            <span>Reviewer: <strong>Marcus Vance (VP of Engineering)</strong></span>
-            <Badge variant="success">Rating: 4.8 / 5.0 (Exceeds)</Badge>
+          <div className="py-8 text-center">
+            <p className="text-xs text-slate-500">
+              No manager feedback recorded yet.
+            </p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Feedback from your appraisal reviews will appear here.
+            </p>
           </div>
         </div>
 
@@ -213,31 +242,15 @@ export default function EmployeePerformancePage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-3">
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-orange-600" />
-            <h3 className="text-base font-bold text-slate-900">Assigned Training & Professional Development</h3>
+            <h3 className="text-base font-bold text-slate-900">Assigned Training &amp; Professional Development</h3>
           </div>
-
-          <div className="space-y-2.5 text-xs">
-            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex items-center justify-between">
-              <div>
-                <strong className="text-slate-900 block font-semibold">
-                  AWS Certified Advanced Networking – Specialty
-                </strong>
-                <span className="text-slate-400 text-[11px]">Bayshore Sponsored Certification Exam</span>
-              </div>
-              <Badge variant="outline" className="text-orange-600 border-orange-200">
-                In Progress (70%)
-              </Badge>
-            </div>
-
-            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex items-center justify-between">
-              <div>
-                <strong className="text-slate-900 block font-semibold">
-                  Enterprise Leadership & People Operations 2026
-                </strong>
-                <span className="text-slate-400 text-[11px]">Bayshore Executive Training Track</span>
-              </div>
-              <Badge variant="success">Completed</Badge>
-            </div>
+          <div className="py-8 text-center">
+            <p className="text-xs text-slate-500">
+              No trainings or certifications assigned yet.
+            </p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Learning programs assigned by HR will appear here.
+            </p>
           </div>
         </div>
       </div>

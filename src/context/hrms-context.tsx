@@ -17,13 +17,7 @@ import {
   DepartmentInfo,
 } from "@/types";
 import { EmployeeLeaveBalance } from "@/types/employee-portal";
-import {
-  mockBirthdays,
-  mockUpcomingInterviews,
-  mockAnnouncements,
-  initialAnnualLeavePolicies,
-} from "@/data/mock-data";
-import { companyHolidaysList } from "@/data/employee-mock-data";
+import { buildUpcomingBirthdays } from "@/lib/dashboard-analytics";
 import { useAuth } from "./auth-context";
 import { useToast } from "./toast-context";
 
@@ -112,6 +106,19 @@ interface HRMSContextValue {
     days: number;
     reason: string;
   }) => Promise<{ success: boolean; message: string }>;
+  // Announcements (DB-backed)
+  createAnnouncement: (data: {
+    title: string;
+    summary: string;
+    category: AnnouncementItem["category"];
+    isImportant?: boolean;
+  }) => Promise<{ success: boolean; error?: string }>;
+  deleteAnnouncement: (id: string) => Promise<void>;
+  // Interviews (DB-backed)
+  markInterviewStatus: (
+    id: string,
+    status: InterviewItem["status"]
+  ) => Promise<void>;
 }
 
 const HRMSContext = React.createContext<HRMSContextValue | undefined>(undefined);
@@ -127,15 +134,14 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
   const [leaveRequests, setLeaveRequests] = React.useState<LeaveRequest[]>([]);
   const [annualLeavePolicies, setAnnualLeavePolicies] = React.useState<
     AnnualLeavePolicyItem[]
-  >(initialAnnualLeavePolicies);
-  const [officeHolidays, setOfficeHolidays] =
-    React.useState<OfficeHoliday[]>(companyHolidaysList);
+  >([]);
+  const [officeHolidays, setOfficeHolidays] = React.useState<OfficeHoliday[]>([]);
   const [expenseClaims, setExpenseClaims] = React.useState<ExpenseClaim[]>([]);
   const [activities, setActivities] = React.useState<ActivityItem[]>([]);
   const [departments, setDepartments] = React.useState<DepartmentInfo[]>([]);
-  const [birthdays] = React.useState<BirthdayItem[]>(mockBirthdays);
-  const [interviews] = React.useState<InterviewItem[]>(mockUpcomingInterviews);
-  const [announcements] = React.useState<AnnouncementItem[]>(mockAnnouncements);
+  const [birthdays, setBirthdays] = React.useState<BirthdayItem[]>([]);
+  const [interviews, setInterviews] = React.useState<InterviewItem[]>([]);
+  const [announcements, setAnnouncements] = React.useState<AnnouncementItem[]>([]);
   const [isLoadingData, setIsLoadingData] = React.useState(false);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
@@ -197,10 +203,21 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         setAttendanceRecords([]);
         setExpenseClaims([]);
         setActivities([]);
+        try {
+          const annRes = await fetch("/api/announcements", { cache: "no-store" });
+          if (annRes.ok) {
+            const d = (await annRes.json()) as {
+              announcements?: AnnouncementItem[];
+            };
+            if (d.announcements) setAnnouncements(d.announcements);
+          }
+        } catch {
+          // announcements are non-critical for employees
+        }
         return;
       }
 
-      const [empRes, attRes, leavesRes, claimsRes, dashRes, deptRes] =
+      const [empRes, attRes, leavesRes, claimsRes, dashRes, deptRes, annRes, intRes] =
         await Promise.all([
           fetch("/api/employees", { cache: "no-store" }),
           fetch("/api/attendance", { cache: "no-store" }),
@@ -208,6 +225,8 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
           fetch("/api/claims", { cache: "no-store" }),
           fetch("/api/dashboard", { cache: "no-store" }),
           fetch("/api/departments", { cache: "no-store" }),
+          fetch("/api/announcements", { cache: "no-store" }),
+          fetch("/api/interviews", { cache: "no-store" }),
         ]);
 
       if (empRes.ok) {
@@ -240,12 +259,24 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         const d = (await deptRes.json()) as { departments?: DepartmentInfo[] };
         if (d.departments) setDepartments(d.departments);
       }
+      if (annRes.ok) {
+        const d = (await annRes.json()) as { announcements?: AnnouncementItem[] };
+        if (d.announcements) setAnnouncements(d.announcements);
+      }
+      if (intRes.ok) {
+        const d = (await intRes.json()) as { interviews?: InterviewItem[] };
+        if (d.interviews) setInterviews(d.interviews);
+      }
     } catch {
       // ignore transient errors cleanly
     } finally {
       setIsLoadingData(false);
     }
   }, [isHydrated, isAuthenticated, currentRole]);
+
+  React.useEffect(() => {
+    setBirthdays(buildUpcomingBirthdays(employees));
+  }, [employees]);
 
   React.useEffect(() => {
     if (!isHydrated || !isAuthenticated) return;
@@ -726,6 +757,81 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const createAnnouncement = async (data: {
+    title: string;
+    summary: string;
+    category: AnnouncementItem["category"];
+    isImportant?: boolean;
+  }) => {
+    try {
+      const res = await fetch("/api/announcements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        announcement?: AnnouncementItem;
+        error?: string;
+      };
+      if (!res.ok || !payload.announcement) {
+        showToast(
+          "Could Not Publish",
+          payload.error || "Failed to publish announcement.",
+          "error"
+        );
+        return { success: false, error: payload.error };
+      }
+      setAnnouncements((prev) => [payload.announcement!, ...prev]);
+      showToast(
+        "Announcement Published",
+        `"${payload.announcement.title}" is now visible company-wide.`,
+        "success"
+      );
+      return { success: true };
+    } catch {
+      showToast("Network Error", "Could not publish announcement.", "error");
+      return { success: false, error: "Network error" };
+    }
+  };
+
+  const deleteAnnouncement = async (id: string) => {
+    try {
+      const res = await fetch(`/api/announcements?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        showToast("Delete Failed", "Could not delete announcement.", "error");
+        return;
+      }
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+      showToast("Announcement Removed", "The bulletin has been taken down.", "info");
+    } catch {
+      showToast("Network Error", "Could not delete announcement.", "error");
+    }
+  };
+
+  const markInterviewStatus = async (
+    id: string,
+    status: InterviewItem["status"]
+  ) => {
+    try {
+      const res = await fetch("/api/interviews", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) {
+        showToast("Update Failed", "Could not update interview status.", "error");
+        return;
+      }
+      setInterviews((prev) =>
+        prev.map((iv) => (iv.id === id ? { ...iv, status } : iv))
+      );
+    } catch {
+      showToast("Network Error", "Could not update interview status.", "error");
+    }
+  };
+
   const exportReport = (format: "csv" | "xlsx" | "pdf", range: string) => {
     showToast(
       "Report Generated",
@@ -789,6 +895,9 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         approveLeave,
         rejectLeave,
         sendBirthdayWish,
+        createAnnouncement,
+        deleteAnnouncement,
+        markInterviewStatus,
         exportReport,
         annualLeavePolicies,
         officeHolidays,

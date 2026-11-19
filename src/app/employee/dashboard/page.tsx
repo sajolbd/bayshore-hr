@@ -12,6 +12,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useEmployee, useLiveShiftSeconds } from "@/context/employee-context";
+import { useHRMS } from "@/context/hrms-context";
 import { useGreeting } from "@/hooks/use-greeting";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -55,13 +56,60 @@ export default function EmployeeDashboardPage() {
     officeHolidays,
     payslips,
     goals,
+    expenseClaims,
   } = useEmployee();
 
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = React.useState(false);
   const [selectedPayslip, setSelectedPayslip] = React.useState<EmployeePayslip | null>(null);
   const { greeting, dateLabel } = useGreeting();
+  const { announcements } = useHRMS();
 
   const latestPayslip = payslips[0];
+  const overallGoalProgress = goals.length
+    ? Math.round(
+        goals.reduce((sum, goal) => sum + goal.progress, 0) / goals.length
+      )
+    : 0;
+  const topAnnouncements = React.useMemo(
+    () =>
+      [...announcements]
+        .sort((a, b) => {
+          if (!!b.isImportant !== !!a.isImportant) return b.isImportant ? 1 : -1;
+          return b.date.localeCompare(a.date);
+        })
+        .slice(0, 2),
+    [announcements]
+  );
+
+  const now = new Date();
+  const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const thisMonthLabel = now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const inMonth = (dateStr: string) => {
+    const parsed = new Date(dateStr);
+    if (Number.isNaN(parsed.getTime())) return false;
+    const key = `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}`;
+    return key === thisMonthKey;
+  };
+
+  const approvedRequestsThisMonth = leaveRequests.filter(
+    (req) => req.status === "Approved" && inMonth(req.startDate)
+  );
+  const approvedLeaveDaysThisMonth = approvedRequestsThisMonth.reduce(
+    (sum, req) => sum + req.days,
+    0
+  );
+  const pendingLeaveRequests = leaveRequests.filter(
+    (req) => req.status === "Pending"
+  );
+  const claimsThisMonth = expenseClaims.filter((claim) => inMonth(claim.dateIncurred));
+  const totalClaimAmountThisMonth = claimsThisMonth.reduce(
+    (sum, claim) => sum + claim.amount,
+    0
+  );
+  const totalAvailableLeaveDays = leaveBalances.reduce(
+    (sum, item) => sum + item.available,
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -289,34 +337,47 @@ export default function EmployeeDashboardPage() {
         )}
       </div>
 
-      {/* 3. Monthly Attendance Summary Metrics */}
+      {/* 3. This Month at a Glance */}
       <div>
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-          November 2026 Monthly Summary
+          {thisMonthLabel} Summary
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-            <span className="text-xs text-slate-500 block">Total Working Days</span>
-            <span className="text-2xl font-bold text-slate-900 mt-1 block">22 Days</span>
-            <span className="text-[11px] text-slate-400 mt-0.5 block">Sun – Thu Workweek</span>
+            <span className="text-xs text-slate-500 block">Approved Leaves</span>
+            <span className="text-2xl font-bold text-blue-700 mt-1 block">
+              {approvedLeaveDaysThisMonth} Days
+            </span>
+            <span className="text-[11px] text-blue-600 mt-0.5 block">
+              {approvedRequestsThisMonth.length} approved request
+              {approvedRequestsThisMonth.length === 1 ? "" : "s"} this month
+            </span>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-            <span className="text-xs text-emerald-600 font-semibold block">Present & On Duty</span>
-            <span className="text-2xl font-bold text-emerald-700 mt-1 block">18 Days</span>
-            <span className="text-[11px] text-emerald-600 mt-0.5 block">94.7% On-Time Record</span>
+            <span className="text-xs text-amber-600 font-semibold block">Pending Requests</span>
+            <span className="text-2xl font-bold text-amber-700 mt-1 block">
+              {pendingLeaveRequests.length}
+            </span>
+            <span className="text-[11px] text-amber-600 mt-0.5 block">Awaiting approval</span>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-            <span className="text-xs text-amber-600 font-semibold block">Late Check-in</span>
-            <span className="text-2xl font-bold text-amber-700 mt-1 block">1 Day</span>
-            <span className="text-[11px] text-amber-600 mt-0.5 block">Nov 04 (09:35 AM)</span>
+            <span className="text-xs text-emerald-600 font-semibold block">Claims This Month</span>
+            <span className="text-2xl font-bold text-emerald-700 mt-1 block">{claimsThisMonth.length}</span>
+            <span className="text-[11px] text-emerald-600 mt-0.5 block">
+              {formatBDT(totalClaimAmountThisMonth)} filed
+            </span>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-            <span className="text-xs text-blue-600 font-semibold block">Approved Leaves</span>
-            <span className="text-2xl font-bold text-blue-700 mt-1 block">3 Days</span>
-            <span className="text-[11px] text-blue-600 mt-0.5 block">2 Casual • 1 Annual</span>
+            <span className="text-xs text-slate-500 block">Available Leave</span>
+            <span className="text-2xl font-bold text-slate-900 mt-1 block">
+              {totalAvailableLeaveDays} Days
+            </span>
+            <span className="text-[11px] text-slate-400 mt-0.5 block">
+              Across {leaveBalances.length} categories
+            </span>
           </div>
         </div>
       </div>
@@ -329,7 +390,7 @@ export default function EmployeeDashboardPage() {
             <div>
               <h3 className="text-base font-bold text-slate-900">Available Leave Balances</h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Annual allocation cycle: Jan 01, 2026 – Dec 31, 2026
+                Annual allocation cycle: Jan 01, {now.getFullYear()} – Dec 31, {now.getFullYear()}
               </p>
             </div>
             <Button
@@ -435,11 +496,23 @@ export default function EmployeeDashboardPage() {
               </Link>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Q4 Performance Evaluation Target
+              {goals.length > 0
+                ? `${goals.length} goal${goals.length === 1 ? "" : "s"} assigned • ${overallGoalProgress}% average progress`
+                : "No goals assigned yet"}
             </p>
 
             <div className="mt-4 space-y-3.5">
-              {goals.slice(0, 3).map((goal) => (
+              {goals.length === 0 ? (
+                <div className="py-6 text-center">
+                  <p className="text-xs text-slate-500">
+                    No OKR goals have been assigned to you yet.
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Assigned goals from your manager will appear here.
+                  </p>
+                </div>
+              ) : (
+                goals.slice(0, 3).map((goal) => (
                 <div key={goal.id} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-slate-800 truncate pr-2">
@@ -460,13 +533,16 @@ export default function EmployeeDashboardPage() {
                     <span className="text-emerald-600 font-medium">{goal.status}</span>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500">Overall Progress</span>
-            <span className="font-bold text-slate-900">81.6% Achieved</span>
+            <span className="font-bold text-slate-900">
+              {overallGoalProgress}% {goals.length > 0 ? "Achieved" : "— no goals"}
+            </span>
           </div>
         </div>
       </div>
@@ -486,25 +562,34 @@ export default function EmployeeDashboardPage() {
           </div>
 
           <div className="space-y-3">
-            <div className="p-3.5 rounded-xl border border-orange-100 bg-orange-50/40 text-xs space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-900">Q4 All-Hands Town Hall & Awards</span>
-                <span className="text-[10px] text-orange-700 font-semibold">Wednesday, 4:00 PM</span>
+            {topAnnouncements.length === 0 ? (
+              <div className="py-6 text-center">
+                <p className="text-xs text-slate-500">No announcements published yet.</p>
               </div>
-              <p className="text-slate-600 leading-relaxed">
-                Join our CEO and Executive leadership team at the Abtab Nagar Auditorium or virtual bridge for Q4 company milestones and team recognitions.
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-white text-xs space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-900">Annual Retreat 2026: Cox&apos;s Bazar</span>
-                <span className="text-[10px] text-slate-400">Published 2d ago</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed">
-                Registration is open for our 3-day corporate offsite in December. Confirm your travel preferences in the HR portal by Nov 20.
-              </p>
-            </div>
+            ) : (
+              topAnnouncements.map((item) => (
+                <div
+                  key={item.id}
+                  className={`p-3.5 rounded-xl text-xs space-y-1 ${
+                    item.isImportant
+                      ? "border border-orange-100 bg-orange-50/40"
+                      : "border border-slate-200 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-slate-900 truncate">{item.title}</span>
+                    <span
+                      className={`text-[10px] shrink-0 font-semibold ${
+                        item.isImportant ? "text-orange-700" : "text-slate-400"
+                      }`}
+                    >
+                      {item.date}
+                    </span>
+                  </div>
+                  <p className="text-slate-600 leading-relaxed line-clamp-2">{item.summary}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -513,7 +598,7 @@ export default function EmployeeDashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-orange-600" />
-              <h3 className="text-base font-bold text-slate-900">Upcoming Holidays (2026-2027)</h3>
+              <h3 className="text-base font-bold text-slate-900">Upcoming Holidays</h3>
             </div>
             <Link href="/employee/calendar" className="text-xs text-orange-600 hover:underline">
               Full Calendar →
@@ -521,7 +606,12 @@ export default function EmployeeDashboardPage() {
           </div>
 
           <div className="divide-y divide-slate-100 text-xs">
-            {officeHolidays.slice(0, 4).map((holiday) => (
+            {officeHolidays.slice(0, 4).length === 0 ? (
+              <div className="py-6 text-center text-slate-500">
+                No upcoming holidays announced yet.
+              </div>
+            ) : (
+              officeHolidays.slice(0, 4).map((holiday) => (
               <div key={holiday.id} className="py-2.5 flex items-center justify-between">
                 <div>
                   <strong className="text-slate-900 block">{holiday.name}</strong>
@@ -533,7 +623,8 @@ export default function EmployeeDashboardPage() {
                   {holiday.date}
                 </Badge>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
       </div>

@@ -15,12 +15,7 @@ import {
   ClaimEntitlement,
 } from "@/types/employee-portal";
 import { LeaveType, LeaveStatus, OfficeHoliday } from "@/types";
-import {
-  employeeGoalsList,
-  employeeHRRequestsList,
-  employeeNotificationsList,
-} from "@/data/employee-mock-data";
-import { employeeClaimEntitlements } from "@/data/claims-mock-data";
+import { claimEntitlements } from "@/lib/claim-entitlements";
 import { useHRMS } from "@/context/hrms-context";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -279,12 +274,11 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
     []
   );
   const [expenseClaims, setExpenseClaims] = React.useState<ExpenseClaim[]>([]);
-  const [goals, setGoals] = React.useState<EmployeeGoal[]>(employeeGoalsList);
-  const [hrRequests, setHrRequests] =
-    React.useState<EmployeeHRRequest[]>(employeeHRRequestsList);
+  const [goals, setGoals] = React.useState<EmployeeGoal[]>([]);
+  const [hrRequests, setHrRequests] = React.useState<EmployeeHRRequest[]>([]);
   const [notifications, setNotifications] = React.useState<
     EmployeeNotification[]
-  >(employeeNotificationsList);
+  >([]);
 
   const [isClockInModalOpen, setIsClockInModalOpen] = React.useState(false);
   const [selectedPunchForLocation, setSelectedPunchForLocation] =
@@ -417,7 +411,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
           (spentByCategory[claim.category] || 0) + claim.amount;
       }
     }
-    return employeeClaimEntitlements.map((ent) => {
+    return claimEntitlements.map((ent) => {
       const spent = spentByCategory[ent.category] || 0;
       return {
         ...ent,
@@ -435,20 +429,34 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
   const payslips: EmployeePayslip[] = React.useMemo(() => {
     const totalDed =
       salaryDetails.providentFundDeduction + salaryDetails.incomeTaxDeduction;
+    const monthLabel = (offset: number) => {
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() - offset);
+      return {
+        monthYear: d.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+        issueDate: new Date(d.getFullYear(), d.getMonth() + 1, 1).toLocaleDateString(
+          "en-US",
+          { month: "short", day: "numeric", year: "numeric" }
+        ),
+      };
+    };
+    const last = monthLabel(1);
+    const prev = monthLabel(2);
     return [
       {
-        id: "PAY-2026-10",
-        monthYear: "October 2026",
-        issueDate: "Nov 01, 2026",
+        id: `PAY-${last.monthYear.replace(" ", "-").toUpperCase()}`,
+        monthYear: last.monthYear,
+        issueDate: last.issueDate,
         grossSalary: salaryDetails.grossSalary,
         totalDeductions: totalDed,
         netPayable: salaryDetails.netPayable,
         status: "Paid",
       },
       {
-        id: "PAY-2026-09",
-        monthYear: "September 2026",
-        issueDate: "Oct 01, 2026",
+        id: `PAY-${prev.monthYear.replace(" ", "-").toUpperCase()}`,
+        monthYear: prev.monthYear,
+        issueDate: prev.issueDate,
         grossSalary: salaryDetails.grossSalary,
         totalDeductions: totalDed,
         netPayable: salaryDetails.netPayable,

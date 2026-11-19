@@ -188,7 +188,7 @@ export function SearchModal() {
                       <span className="p-1.5 rounded-lg bg-amber-100 text-amber-700">
                         <Calendar className="h-3.5 w-3.5" />
                       </span>
-                      <span>Company Holiday Calendar 2026</span>
+                      <span>Company Holiday Calendar {new Date().getFullYear()}</span>
                     </div>
                     <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-amber-600" />
                   </button>

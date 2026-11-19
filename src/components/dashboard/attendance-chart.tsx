@@ -12,9 +12,13 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { attendanceOverviewData } from "@/data/mock-data";
 import { CalendarCheck } from "lucide-react";
 import { useMounted } from "@/hooks/use-mounted";
+import { useHRMS } from "@/context/hrms-context";
+import {
+  buildAttendanceOverview,
+  AttendanceOverviewRow,
+} from "@/lib/dashboard-analytics";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -53,6 +57,16 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export function AttendanceChart() {
   const mounted = useMounted();
+  const { attendanceRecords } = useHRMS();
+
+  const overview = React.useMemo(
+    () => buildAttendanceOverview(attendanceRecords),
+    [attendanceRecords]
+  );
+  const hasAnyRecord = overview.some(
+    (row: AttendanceOverviewRow) =>
+      row.present + row.remote + row.late + row.leave > 0
+  );
 
   return (
     <Card className="flex flex-col h-full">
@@ -63,67 +77,80 @@ export function AttendanceChart() {
             <span>Attendance Overview</span>
           </CardTitle>
           <CardDescription>
-            Weekly in-office, on-time, late, and leave metrics.
+            Daily in-office, late, and leave metrics for the last 5 days.
           </CardDescription>
         </div>
         <div className="text-right">
           <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-            This Week
+            Last 5 Days
           </span>
         </div>
       </CardHeader>
       <CardContent className="flex-1 pb-4">
         {mounted ? (
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={attendanceOverviewData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                barSize={16}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis
-                  dataKey="day"
-                  stroke="#94A3B8"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={{ stroke: "#E2E8F0" }}
-                />
-                <YAxis
-                  stroke="#94A3B8"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  verticalAlign="top"
-                  align="right"
-                  iconType="circle"
-                  iconSize={8}
-                  wrapperStyle={{ paddingBottom: "10px", fontSize: "11px" }}
-                />
-                <Bar
-                  dataKey="present"
-                  fill="#EA580C"
-                  radius={[4, 4, 0, 0]}
-                  name="In-Office"
-                />
-                <Bar
-                  dataKey="late"
-                  fill="#F59E0B"
-                  radius={[4, 4, 0, 0]}
-                  name="Late Check-in"
-                />
-                <Bar
-                  dataKey="leave"
-                  fill="#EF4444"
-                  radius={[4, 4, 0, 0]}
-                  name="On Leave"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          hasAnyRecord ? (
+            <div className="h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={overview}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  barSize={16}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                  <XAxis
+                    dataKey="day"
+                    stroke="#94A3B8"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={{ stroke: "#E2E8F0" }}
+                  />
+                  <YAxis
+                    stroke="#94A3B8"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{ paddingBottom: "10px", fontSize: "11px" }}
+                  />
+                  <Bar
+                    dataKey="present"
+                    fill="#EA580C"
+                    radius={[4, 4, 0, 0]}
+                    name="In-Office"
+                  />
+                  <Bar
+                    dataKey="remote"
+                    fill="#10B981"
+                    radius={[4, 4, 0, 0]}
+                    name="Remote"
+                  />
+                  <Bar
+                    dataKey="late"
+                    fill="#F59E0B"
+                    radius={[4, 4, 0, 0]}
+                    name="Late Check-in"
+                  />
+                  <Bar
+                    dataKey="leave"
+                    fill="#EF4444"
+                    radius={[4, 4, 0, 0]}
+                    name="On Leave"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-[280px] w-full flex items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm text-slate-400">
+              No attendance records yet for the last 5 days.
+            </div>
+          )
         ) : (
           <div className="h-[280px] w-full bg-slate-50 animate-pulse rounded-lg" />
         )}

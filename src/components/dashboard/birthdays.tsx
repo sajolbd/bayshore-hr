@@ -29,6 +29,15 @@ export function Birthdays() {
       </CardHeader>
 
       <CardContent className="p-4 flex-1 space-y-3">
+        {birthdays.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-8 text-center rounded-lg border border-dashed border-slate-200">
+            <Cake className="h-5 w-5 text-slate-300 mb-2" />
+            <p className="text-sm font-medium text-slate-500">No birthdays this month</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Add dates of birth to employee profiles to see them here.
+            </p>
+          </div>
+        )}
         {birthdays.map((item) => (
           <div
             key={item.id}

@@ -30,11 +30,12 @@ const claimCategories: ClaimCategory[] = [
 export function NewClaimModal({ isOpen, onClose }: NewClaimModalProps) {
   const { submitClaim } = useEmployee();
 
+  const today = new Date().toLocaleDateString("en-CA");
   const [formData, setFormData] = React.useState({
     title: "",
     category: "Travel & Mileage" as ClaimCategory,
     amount: "",
-    dateIncurred: "2026-11-08",
+    dateIncurred: today,
     merchantName: "",
     receiptFileName: "",
     description: "",
@@ -79,7 +80,7 @@ export function NewClaimModal({ isOpen, onClose }: NewClaimModalProps) {
       title: "",
       category: "Travel & Mileage",
       amount: "",
-      dateIncurred: "2026-11-08",
+      dateIncurred: new Date().toLocaleDateString("en-CA"),
       merchantName: "",
       receiptFileName: "",
       description: "",
@@ -188,7 +189,11 @@ export function NewClaimModal({ isOpen, onClose }: NewClaimModalProps) {
               setReceiptAttached(true);
               setFormData({
                 ...formData,
-                receiptFileName: `Receipt_${formData.merchantName || "Voucher"}_Nov2026.pdf`,
+                receiptFileName: `Receipt_${formData.merchantName || "Voucher"}_${
+                  (formData.dateIncurred ? new Date(formData.dateIncurred) : new Date())
+                    .toLocaleDateString("en-US", { month: "short", year: "numeric" })
+                    .replace(" ", "")
+                }.pdf`,
               });
             }}
             className="border-2 border-dashed border-slate-300 hover:border-orange-500 hover:bg-orange-50/20 rounded-xl p-4 text-center cursor-pointer transition-colors"

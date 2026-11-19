@@ -34,6 +34,7 @@ function mapUserToEmployeeDto(doc: {
   officeInTime?: string;
   officeOutTime?: string;
   role: string;
+  dateOfBirth?: string | null;
   inviteSentAt?: Date | null;
 }) {
   return {
@@ -51,6 +52,10 @@ function mapUserToEmployeeDto(doc: {
     salary: doc.salary,
     officeInTime: normalizeTime24h(doc.officeInTime, DEFAULT_OFFICE_IN_TIME),
     officeOutTime: normalizeTime24h(doc.officeOutTime, DEFAULT_OFFICE_OUT_TIME),
+    dateOfBirth:
+      typeof doc.dateOfBirth === "string" && doc.dateOfBirth.trim()
+        ? doc.dateOfBirth.trim()
+        : undefined,
     inviteSentAt: doc.inviteSentAt ? doc.inviteSentAt.toISOString() : undefined,
   };
 }

@@ -9,9 +9,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { departmentDistributionData } from "@/data/mock-data";
 import { PieChart as PieIcon } from "lucide-react";
 import { useMounted } from "@/hooks/use-mounted";
+import { useHRMS } from "@/context/hrms-context";
+import {
+  buildDepartmentDistribution,
+  DepartmentDistributionRow,
+} from "@/lib/dashboard-analytics";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -48,7 +52,13 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
 
 export function DepartmentChart() {
   const mounted = useMounted();
-  const total = departmentDistributionData.reduce((acc, curr) => acc + curr.value, 0);
+  const { employees } = useHRMS();
+
+  const distribution = React.useMemo(
+    () => buildDepartmentDistribution(employees),
+    [employees]
+  );
+  const total = distribution.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
     <Card className="flex flex-col h-full">
@@ -64,50 +74,56 @@ export function DepartmentChart() {
             </CardDescription>
           </div>
           <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-            5 Departments
+            {distribution.length} Department{distribution.length === 1 ? "" : "s"}
           </span>
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between pt-0 pb-4">
         {mounted ? (
-          <div className="relative h-[210px] w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Tooltip content={<CustomTooltip />} />
-                <Pie
-                  data={departmentDistributionData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={62}
-                  outerRadius={88}
-                  paddingAngle={3}
-                  dataKey="value"
-                  strokeWidth={2}
-                  stroke="#ffffff"
-                >
-                  {departmentDistributionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            {/* Center Total Summary */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-2xl font-bold text-slate-900 leading-none">
-                {total}
-              </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-0.5">
-                Team Total
-              </span>
+          total > 0 ? (
+            <div className="relative h-[210px] w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Pie
+                    data={distribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={62}
+                    outerRadius={88}
+                    paddingAngle={3}
+                    dataKey="value"
+                    strokeWidth={2}
+                    stroke="#ffffff"
+                  >
+                    {distribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center Total Summary */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-2xl font-bold text-slate-900 leading-none">
+                  {total}
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-0.5">
+                  Team Total
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="h-[210px] w-full flex items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm text-slate-400">
+              No employee records yet.
+            </div>
+          )
         ) : (
           <div className="h-[210px] w-full bg-slate-50 animate-pulse rounded-lg" />
         )}
 
         {/* Legend pills */}
         <div className="space-y-1.5 mt-2">
-          {departmentDistributionData.map((item) => (
+          {distribution.map((item) => (
             <div
               key={item.name}
               className="flex items-center justify-between text-xs py-1 px-2 rounded-lg hover:bg-slate-50 transition-colors"

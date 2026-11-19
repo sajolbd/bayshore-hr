@@ -18,6 +18,13 @@ export default function AdminPayrollPage() {
   const [query, setQuery] = React.useState("");
   const [disbursedIds, setDisbursedIds] = React.useState<string[]>([]);
 
+  // Payroll runs for the previous month's cycle.
+  const payrollMonthLabel = React.useMemo(() => {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return prev.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  }, []);
+
   const filteredEmployees = employees.filter(
     (emp) =>
       emp.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -48,7 +55,7 @@ export default function AdminPayrollPage() {
             Payroll &amp; Salary Disbursements
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            November 2026 monthly salary cycle in Bangladeshi Taka (৳ BDT) with e-Claim settlements.
+            {payrollMonthLabel} monthly salary cycle in Bangladeshi Taka (৳ BDT) with e-Claim settlements.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -65,7 +72,7 @@ export default function AdminPayrollPage() {
             className="gap-2 bg-orange-600 hover:bg-orange-700 text-white shadow-sm text-xs"
           >
             <CheckCircle2 className="h-4 w-4" />
-            <span>Disburse November Payroll</span>
+            <span>Disburse {payrollMonthLabel.split(" ")[0]} Payroll</span>
           </Button>
         </div>
       </div>
