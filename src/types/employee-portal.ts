@@ -136,7 +136,14 @@ export interface EmployeeNotification {
   id: string;
   title: string;
   message: string;
-  type: "leave" | "attendance" | "payroll" | "announcement" | "review";
+  type:
+    | "leave"
+    | "attendance"
+    | "payroll"
+    | "announcement"
+    | "birthday"
+    | "work-anniversary"
+    | "review";
   time: string;
   read: boolean;
 }

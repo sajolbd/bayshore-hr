@@ -284,6 +284,52 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
   const [selectedPunchForLocation, setSelectedPunchForLocation] =
     React.useState<EmployeePunchRecord | null>(null);
 
+  const formatNotificationTime = React.useCallback((value: string): string => {
+    const ts = new Date(value).getTime();
+    if (Number.isNaN(ts)) return "";
+    const diffMin = Math.floor((Date.now() - ts) / 60000);
+    if (diffMin < 1) return "Just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}h ago`;
+    return new Date(ts).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  }, []);
+
+  const hydrateNotifications = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications", { cache: "no-store" });
+      if (!res.ok) return;
+      const json = (await res.json()) as {
+        notifications?: Array<{
+          id: string;
+          type: EmployeeNotification["type"];
+          title: string;
+          message: string;
+          read: boolean;
+          createdAt: string;
+        }>;
+      };
+      if (!Array.isArray(json.notifications)) return;
+      setNotifications((prev) => {
+        const localOnly = prev.filter((n) => n.id.startsWith("enotif-"));
+        const serverItems = json.notifications!.map((n) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          type: n.type,
+          time: formatNotificationTime(n.createdAt),
+          read: n.read,
+        }));
+        return [...localOnly, ...serverItems];
+      });
+    } catch {
+      // notifications are non-critical; ignore transient errors
+    }
+  }, [formatNotificationTime]);
+
   const openLocationModal = (record: EmployeePunchRecord) => {
     setSelectedPunchForLocation(record);
   };
@@ -300,6 +346,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
         fetch("/api/attendance", { cache: "no-store" }),
         fetch("/api/claims", { cache: "no-store" }),
       ]);
+      void hydrateNotifications();
 
       if (profRes.ok) {
         const profJson = (await profRes.json()) as {
@@ -370,7 +417,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore transient errors cleanly
     }
-  }, [isHydrated, isAuthenticated, currentUser]);
+  }, [isHydrated, isAuthenticated, currentUser, hydrateNotifications]);
 
   React.useEffect(() => {
     if (!isHydrated || !isAuthenticated || !currentUser) return;
@@ -379,6 +426,16 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
     }, 0);
     return () => clearTimeout(timer);
   }, [isHydrated, isAuthenticated, currentUser, hydrateEmployeePortal]);
+
+  // Poll server notifications while signed in so new announcements,
+  // birthday wishes, and HR notices arrive without a manual reload.
+  React.useEffect(() => {
+    if (!isHydrated || !isAuthenticated || !currentUser) return;
+    const interval = setInterval(() => {
+      void hydrateNotifications();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [isHydrated, isAuthenticated, currentUser, hydrateNotifications]);
 
   const syncedLeaveRequests: EmployeeLeaveRequestItem[] = React.useMemo(() => {
     const empId = profile.id || currentUser?.employeeId || "";
@@ -813,10 +870,22 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+    if (!id.startsWith("enotif-")) {
+      void fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      }).catch(() => undefined);
+    }
   };
 
   const markAllNotificationsAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    void fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ all: true }),
+    }).catch(() => undefined);
   };
 
   const updateGoalSelfAssessment = (goalId: string, notes: string) => {

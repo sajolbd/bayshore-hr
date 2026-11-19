@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   CalendarOff,
   Megaphone,
+  Cake,
 } from "lucide-react";
 import { useEmployee } from "@/context/employee-context";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ export default function EmployeeNotificationsPage() {
           { label: "Attendance", value: "attendance" },
           { label: "Leave", value: "leave" },
           { label: "Announcements", value: "announcement" },
+          { label: "Birthdays", value: "birthday" },
         ].map((tab) => (
           <button
             key={tab.value}
@@ -105,6 +107,8 @@ export default function EmployeeNotificationsPage() {
                     ? "bg-blue-100 text-blue-700"
                     : item.type === "leave"
                     ? "bg-orange-100 text-orange-700"
+                    : item.type === "birthday" || item.type === "work-anniversary"
+                    ? "bg-pink-100 text-pink-700"
                     : "bg-amber-100 text-amber-700"
                 }`}
               >
@@ -114,6 +118,8 @@ export default function EmployeeNotificationsPage() {
                   <CalendarCheck className="h-4 w-4" />
                 ) : item.type === "leave" ? (
                   <CalendarOff className="h-4 w-4" />
+                ) : item.type === "birthday" || item.type === "work-anniversary" ? (
+                  <Cake className="h-4 w-4" />
                 ) : (
                   <Megaphone className="h-4 w-4" />
                 )}

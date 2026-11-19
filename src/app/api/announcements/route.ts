@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { ensureDatabaseBootstrapped } from "@/lib/bootstrap";
 import { getSessionUser, isAdminRole } from "@/lib/auth-server";
 import { AnnouncementModel } from "@/models/Announcement";
+import { notifyAllActiveEmployees } from "@/lib/notification-service";
 import { AnnouncementItem } from "@/types";
 
 const VALID_CATEGORIES = [
@@ -116,6 +117,23 @@ export async function POST(request: NextRequest) {
       authorAvatar: session.avatar || "",
       isImportant: Boolean(body.isImportant),
     });
+
+    // Push an in-app notification to every active employee when an
+    // announcement notice goes out. Never fails the announcement itself.
+    try {
+      await notifyAllActiveEmployees(
+        {
+          type: "announcement",
+          title: `${category}${body.isImportant ? " — Important" : ""}: ${title}`,
+          message: summary,
+          refId: created._id.toString(),
+          dedupKey: `announcement:${created._id.toString()}`,
+        },
+        session.employeeId
+      );
+    } catch (notifyErr) {
+      console.error("Announcement notification fan-out failed:", notifyErr);
+    }
 
     return NextResponse.json({ announcement: mapToItem(created) }, { status: 201 });
   } catch (err) {
