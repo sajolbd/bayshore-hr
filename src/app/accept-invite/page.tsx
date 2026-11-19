@@ -17,6 +17,8 @@ import {
   AlertCircle,
   Loader2,
   UserCheck,
+  Download,
+  Apple,
 } from "lucide-react";
 import { BayshoreLogo } from "@/components/common/bayshore-logo";
 
@@ -288,6 +290,61 @@ function AcceptInviteContent() {
               </Button>
             </form>
           ) : null}
+
+          <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-500 leading-relaxed space-y-3">
+            <div className="space-y-1">
+              <p className="font-semibold text-slate-700">Official Mobile Attendance App</p>
+              <p>
+                All staff work 100% onsite at Abtab Nagar HQ. Download the updated mobile app to check in and out seamlessly.
+              </p>
+            </div>
+
+            <a
+              href="/downloads/Bayshore-HR.apk?v=1.0.3"
+              download="Bayshore-HR.apk"
+              className="flex items-center justify-between gap-3 rounded-xl border border-orange-200 bg-orange-50/80 px-3.5 py-2.5 text-orange-800 hover:bg-orange-100/80 transition-colors"
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <BayshoreLogo size={28} />
+                <span className="min-w-0">
+                  <span className="block font-bold text-xs text-slate-900 truncate">
+                    Download Bayshore HR Android App
+                  </span>
+                  <span className="block text-[10px] text-orange-700 font-medium">
+                    Bayshore-HR.apk • Updated Release (HR &amp; Attendance)
+                  </span>
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-lg bg-orange-600 px-2.5 py-1.5 text-[11px] font-bold text-white shrink-0 shadow-2xs">
+                <Download className="h-3.5 w-3.5" />
+                <span>APK</span>
+              </span>
+            </a>
+
+            <a
+              href="/downloads/Bayshore-HR-iOS.zip"
+              download="Bayshore-HR-iOS.zip"
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/90 px-3.5 py-2.5 text-slate-800 hover:bg-slate-100 transition-colors"
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <div className="h-7 w-7 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
+                  <Apple className="h-4 w-4" />
+                </div>
+                <span className="min-w-0">
+                  <span className="block font-bold text-xs text-slate-900 truncate">
+                    Download Bayshore HR iOS Package
+                  </span>
+                  <span className="block text-[10px] text-slate-500 font-medium">
+                    Bayshore-HR-iOS.zip • SwiftUI 5.9 (Abtab Nagar HQ)
+                  </span>
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-bold text-white shrink-0 shadow-2xs">
+                <Download className="h-3.5 w-3.5" />
+                <span>ZIP</span>
+              </span>
+            </a>
+          </div>
         </Card>
       </div>
     </div>

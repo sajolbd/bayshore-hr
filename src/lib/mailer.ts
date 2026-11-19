@@ -202,6 +202,20 @@ function buildInviteHtml(payload: InviteEmailPayload): string {
               Accept Invitation &amp; Set Password
             </a>
           </div>
+          <div style="margin: 20px 0; padding: 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; text-align: center;">
+            <p style="margin: 0 0 8px; font-size: 12px; font-weight: 700; color: #9a3412;">
+              Official Bayshore HR Mobile App (100% Onsite Abtab Nagar HQ)
+            </p>
+            <p style="margin: 0 0 10px; font-size: 11px; color: #7c2d12;">
+              Download the official mobile app to check in and out easily:
+            </p>
+            <a href="${payload.inviteUrl.split('/accept-invite')[0]}/downloads/Bayshore-HR.apk?v=1.0.3" style="display: inline-block; background: #ea580c; color: #ffffff; font-weight: 600; font-size: 12px; text-decoration: none; padding: 8px 18px; border-radius: 8px; margin: 3px 4px;">
+              Download Android APK
+            </a>
+            <a href="${payload.inviteUrl.split('/accept-invite')[0]}/downloads/Bayshore-HR-iOS.zip" style="display: inline-block; background: #0f172a; color: #ffffff; font-weight: 600; font-size: 12px; text-decoration: none; padding: 8px 18px; border-radius: 8px; margin: 3px 4px;">
+              Download iOS Package
+            </a>
+          </div>
           <p style="margin: 0 0 8px; font-size: 12px; color: #64748b;">
             Or copy and paste this link into your browser (valid for ${expiresHours} hours):
           </p>
