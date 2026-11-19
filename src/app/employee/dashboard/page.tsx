@@ -12,6 +12,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useEmployee, useLiveShiftSeconds } from "@/context/employee-context";
+import { useGreeting } from "@/hooks/use-greeting";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,7 @@ export default function EmployeeDashboardPage() {
 
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = React.useState(false);
   const [selectedPayslip, setSelectedPayslip] = React.useState<EmployeePayslip | null>(null);
+  const { greeting, dateLabel } = useGreeting();
 
   const latestPayslip = payslips[0];
 
@@ -76,14 +78,14 @@ export default function EmployeeDashboardPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                Good morning, {profile.name} 👋
+                {greeting}, {profile.name} 👋
               </h1>
               <Badge variant="warning" className="hidden sm:inline-flex text-[11px]">
                 {profile.role}
               </Badge>
             </div>
             <p className="text-sm text-slate-500 mt-1">
-              Sunday, November 08, 2026 • House - 21, Level 2, Road 1, Block A, Abtab Nagar
+              {dateLabel} • House - 21, Level 2, Road 1, Block A, Abtab Nagar
             </p>
           </div>
         </div>
