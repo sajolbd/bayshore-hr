@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCheck,
   CalendarCheck,
@@ -9,10 +10,12 @@ import {
   Cake,
 } from "lucide-react";
 import { useEmployee } from "@/context/employee-context";
+import { getNotificationRoute } from "@/lib/notification-routes";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export default function EmployeeNotificationsPage() {
+  const router = useRouter();
   const {
     notifications,
     unreadNotificationCount,
@@ -94,7 +97,10 @@ export default function EmployeeNotificationsPage() {
           filtered.map((item) => (
             <div
               key={item.id}
-              onClick={() => markNotificationAsRead(item.id)}
+              onClick={() => {
+                markNotificationAsRead(item.id);
+                router.push(getNotificationRoute(item.type));
+              }}
               className={`p-4 sm:p-5 flex items-start gap-4 transition-colors cursor-pointer ${
                 !item.read ? "bg-orange-50/40 hover:bg-orange-50/70" : "hover:bg-slate-50/70"
               }`}

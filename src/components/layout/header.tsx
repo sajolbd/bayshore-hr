@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useHRMS } from "@/context/hrms-context";
 import { useAuth } from "@/context/auth-context";
 import { useEmployee, useLiveShiftSeconds } from "@/context/employee-context";
+import { getNotificationRoute } from "@/lib/notification-routes";
 import { ActivityItem } from "@/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -403,7 +404,7 @@ export function Header() {
                     key={notif.id}
                     onClick={() => {
                       markNotificationAsRead(notif.id);
-                      router.push("/employee/notifications");
+                      router.push(getNotificationRoute(notif.type));
                     }}
                     className={cn(
                       "p-3.5 transition-colors hover:bg-slate-50 cursor-pointer flex gap-3",
