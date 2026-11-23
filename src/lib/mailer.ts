@@ -209,7 +209,7 @@ function buildInviteHtml(payload: InviteEmailPayload): string {
             <p style="margin: 0 0 10px; font-size: 11px; color: #7c2d12;">
               Download the official mobile app to check in and out easily:
             </p>
-            <a href="${payload.inviteUrl.split('/accept-invite')[0]}/downloads/Bayshore-HR.apk?v=1.0.4" style="display: inline-block; background: #ea580c; color: #ffffff; font-weight: 600; font-size: 12px; text-decoration: none; padding: 8px 18px; border-radius: 8px; margin: 3px 4px;">
+            <a href="${payload.inviteUrl.split('/accept-invite')[0]}/downloads/Bayshore-HR.apk?v=1.0.5" style="display: inline-block; background: #ea580c; color: #ffffff; font-weight: 600; font-size: 12px; text-decoration: none; padding: 8px 18px; border-radius: 8px; margin: 3px 4px;">
               Download Android APK
             </a>
             <a href="${payload.inviteUrl.split('/accept-invite')[0]}/downloads/Bayshore-HR-iOS.zip" style="display: inline-block; background: #0f172a; color: #ffffff; font-weight: 600; font-size: 12px; text-decoration: none; padding: 8px 18px; border-radius: 8px; margin: 3px 4px;">

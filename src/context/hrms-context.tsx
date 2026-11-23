@@ -90,7 +90,7 @@ interface HRMSContextValue {
   deleteEmployee: (id: string) => Promise<void>;
   approveLeave: (leaveId: string) => Promise<void>;
   rejectLeave: (leaveId: string, reason?: string) => Promise<void>;
-  sendBirthdayWish: (birthdayId: string) => void;
+  sendBirthdayWish: (birthdayId: string) => Promise<void>;
   exportReport: (format: "csv" | "xlsx" | "pdf", range: string) => void;
   // Yearly Leave Quotas, Employee Balances & Office Holidays
   annualLeavePolicies: AnnualLeavePolicyItem[];
@@ -837,14 +837,35 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const sendBirthdayWish = (birthdayId: string) => {
+  const sendBirthdayWish = async (birthdayId: string) => {
     const bday = birthdays.find((b) => b.id === birthdayId);
     if (!bday) return;
-    showToast(
-      "Birthday Wish Sent! 🎂",
-      `Celebration message dispatched to ${bday.employeeName}.`,
-      "success"
-    );
+    try {
+      const res = await fetch("/api/birthdays", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: bday.id,
+          message: "Happy Birthday! Wishing you a wonderful year ahead.",
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        showToast(
+          "Birthday Wish",
+          data.error || "Could not send the birthday wish.",
+          "warning"
+        );
+        return;
+      }
+      showToast(
+        "Birthday Wish Sent!",
+        `Celebration message dispatched to ${bday.employeeName}.`,
+        "success"
+      );
+    } catch {
+      showToast("Network Error", "Could not send the birthday wish.", "error");
+    }
   };
 
   const createAnnouncement = async (data: {

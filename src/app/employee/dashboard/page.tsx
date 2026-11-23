@@ -25,6 +25,7 @@ import {
 } from "@/lib/office-time";
 import { ApplyLeaveModal } from "@/components/employee/apply-leave-modal";
 import { PayslipModal } from "@/components/employee/payslip-modal";
+import { TodaysBirthdays } from "@/components/dashboard/todays-birthdays";
 import { EmployeePayslip } from "@/types/employee-portal";
 
 function LiveShiftTimerDisplay() {
@@ -549,8 +550,7 @@ export default function EmployeeDashboardPage() {
 
       {/* 5. Company Announcements & Upcoming Holidays */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Company Announcements */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+        {/* Company Announcements */}        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Megaphone className="h-4 w-4 text-orange-600" />
@@ -628,6 +628,9 @@ export default function EmployeeDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* 6. Today's Birthdays & Team Wishes */}
+      <TodaysBirthdays />
 
       {/* Modals */}
       <ApplyLeaveModal

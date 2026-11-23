@@ -14,6 +14,7 @@ import { Birthdays } from "@/components/dashboard/birthdays";
 import { RecentActivities } from "@/components/dashboard/recent-activities";
 import { UpcomingInterviews } from "@/components/dashboard/upcoming-interviews";
 import { Announcements } from "@/components/dashboard/announcements";
+import { TodaysBirthdays } from "@/components/dashboard/todays-birthdays";
 
 export default function DashboardPage() {
   const { isEmployeeView } = useAuth();
@@ -57,10 +58,11 @@ export default function DashboardPage() {
       </div>
 
       {/* 6. Activities, Birthdays & Company Announcements */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         <RecentActivities />
         <Birthdays />
         <Announcements />
+        <TodaysBirthdays />
       </div>
     </div>
   );

@@ -211,7 +211,7 @@ export default function LoginPage() {
               </p>
             </div>
             <a
-              href="/downloads/Bayshore-HR.apk?v=1.0.4"
+              href="/downloads/Bayshore-HR.apk?v=1.0.5"
               download="Bayshore-HR.apk"
               className="flex items-center justify-between gap-3 rounded-xl border border-orange-200 bg-orange-50/80 px-3.5 py-2.5 text-orange-800 hover:bg-orange-100/80 transition-colors"
             >
@@ -222,7 +222,7 @@ export default function LoginPage() {
                     Download Bayshore HR Android App
                   </span>
                   <span className="block text-[10px] text-orange-700 font-medium">
-                    Bayshore-HR.apk • v1.0.4 (HR &amp; Attendance Portal)
+                    Bayshore-HR.apk • v1.0.5 (HR &amp; Attendance Portal)
                   </span>
                 </span>
               </span>
