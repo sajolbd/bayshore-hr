@@ -4,6 +4,7 @@ import * as React from "react";
 import { LeaveRequests } from "@/components/dashboard/leave-requests";
 import { LeavePolicyModal } from "@/components/leaves/leave-policy-modal";
 import { RecordLeaveModal } from "@/components/leaves/record-leave-modal";
+import { EditLeaveDaysModal } from "@/components/leaves/edit-leave-days-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { useHRMS } from "@/context/hrms-context";
-import { OfficeHoliday } from "@/types";
+import { useAuth } from "@/context/auth-context";
+import { Employee, OfficeHoliday } from "@/types";
 import {
   SlidersHorizontal,
   Plus,
@@ -27,6 +29,7 @@ import {
   Search,
   Trash2,
   CalendarMinus,
+  UserCog,
 } from "lucide-react";
 
 export default function LeavesPage() {
@@ -34,13 +37,17 @@ export default function LeavesPage() {
     employees,
     annualLeavePolicies,
     officeHolidays,
+    employeeLeaveDayEntries,
     getEmployeeLeaveBalances,
     addOfficeHoliday,
     deleteOfficeHoliday,
   } = useHRMS();
+  const { isSuperAdmin } = useAuth();
 
   const [isPolicyModalOpen, setIsPolicyModalOpen] = React.useState(false);
   const [isRecordModalOpen, setIsRecordModalOpen] = React.useState(false);
+  const [editingLeaveDaysEmployee, setEditingLeaveDaysEmployee] =
+    React.useState<Employee | null>(null);
   const [selectedEmpId, setSelectedEmpId] = React.useState<string | undefined>(
     undefined
   );
@@ -91,9 +98,9 @@ export default function LeavesPage() {
       employee.id.toLowerCase().includes(employeeSearch.toLowerCase())
   );
 
-  const totalAllocated = Math.max(
-    0,
-    employees.length * annualPolicy.yearlyQuota
+  const totalAllocated = employeeBalanceRows.reduce(
+    (sum, row) => sum + row.annual.total,
+    0
   );
   const totalUsed = employeeBalanceRows.reduce(
     (sum, row) => sum + row.annual.used,
@@ -376,7 +383,9 @@ export default function LeavesPage() {
               Employee Annual Leave Balances (Auto-Deducted)
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Remaining days automatically decrease when Annual Leave is taken and restore if rejected.
+              Remaining days automatically decrease when Annual Leave is taken and restore if
+              rejected. Super Admin can edit any individual employee's leave days with a
+              personal quota.
             </p>
           </div>
           <div className="w-full sm:w-64">
@@ -422,9 +431,18 @@ export default function LeavesPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="text-[11px] font-semibold">
-                    {annual.total} Days / Yr
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-[11px] font-semibold">
+                      {annual.total} Days / Yr
+                    </Badge>
+                    {employeeLeaveDayEntries.some(
+                      (entry) => entry.employeeId === employee.id
+                    ) && (
+                      <Badge variant="orange" className="text-[10px] font-bold">
+                        Custom
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <span className="text-xs font-semibold text-amber-700">
@@ -440,15 +458,28 @@ export default function LeavesPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleOpenRecordModal(employee.id)}
-                    className="h-7 px-2.5 text-[11px] gap-1"
-                  >
-                    <CalendarMinus className="h-3.5 w-3.5 text-orange-600" />
-                    <span>Deduct Leave</span>
-                  </Button>
+                  <div className="flex items-center justify-end gap-1.5">
+                    {isSuperAdmin && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingLeaveDaysEmployee(employee)}
+                        className="h-7 px-2.5 text-[11px] gap-1"
+                      >
+                        <UserCog className="h-3.5 w-3.5 text-orange-600" />
+                        <span>Edit Days</span>
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleOpenRecordModal(employee.id)}
+                      className="h-7 px-2.5 text-[11px] gap-1"
+                    >
+                      <CalendarMinus className="h-3.5 w-3.5 text-orange-600" />
+                      <span>Deduct Leave</span>
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -465,6 +496,11 @@ export default function LeavesPage() {
         open={isRecordModalOpen}
         initialEmployeeId={selectedEmpId}
         onClose={() => setIsRecordModalOpen(false)}
+      />
+      <EditLeaveDaysModal
+        open={editingLeaveDaysEmployee !== null}
+        employee={editingLeaveDaysEmployee}
+        onClose={() => setEditingLeaveDaysEmployee(null)}
       />
     </div>
   );

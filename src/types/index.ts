@@ -280,6 +280,17 @@ export interface AnnualLeavePolicyItem {
   color: string;
 }
 
+export interface EmployeeLeaveDayEntry {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  totalDays: number;
+  usedDaysAdjustment: number;
+  note: string;
+  updatedBy: string;
+  updatedAt: string;
+}
+
 export interface DepartmentInfo {
   id: string;
   name: string;

@@ -15,6 +15,7 @@ import {
   LeaveType,
   InviteEmailResultDto,
   DepartmentInfo,
+  EmployeeLeaveDayEntry,
 } from "@/types";
 import { EmployeeLeaveBalance } from "@/types/employee-portal";
 import { buildUpcomingBirthdays } from "@/lib/dashboard-analytics";
@@ -94,8 +95,16 @@ interface HRMSContextValue {
   // Yearly Leave Quotas, Employee Balances & Office Holidays
   annualLeavePolicies: AnnualLeavePolicyItem[];
   officeHolidays: OfficeHoliday[];
+  employeeLeaveDayEntries: EmployeeLeaveDayEntry[];
   getEmployeeLeaveBalances: (employeeId: string) => EmployeeLeaveBalance[];
   updateAnnualLeavePolicies: (policies: AnnualLeavePolicyItem[]) => Promise<void>;
+  updateEmployeeLeaveDays: (data: {
+    employeeId: string;
+    totalDays: number | null;
+    usedDaysAdjustment?: number;
+    note?: string;
+    resetToDefault?: boolean;
+  }) => Promise<{ success: boolean; error?: string }>;
   addOfficeHoliday: (holiday: Omit<OfficeHoliday, "id">) => Promise<void>;
   deleteOfficeHoliday: (id: string) => Promise<void>;
   addAdminLeaveRecord: (data: {
@@ -136,6 +145,8 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
     AnnualLeavePolicyItem[]
   >([]);
   const [officeHolidays, setOfficeHolidays] = React.useState<OfficeHoliday[]>([]);
+  const [employeeLeaveDayEntries, setEmployeeLeaveDayEntries] =
+    React.useState<EmployeeLeaveDayEntry[]>([]);
   const [expenseClaims, setExpenseClaims] = React.useState<ExpenseClaim[]>([]);
   const [activities, setActivities] = React.useState<ActivityItem[]>([]);
   const [departments, setDepartments] = React.useState<DepartmentInfo[]>([]);
@@ -193,10 +204,13 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
           const leavesData = (await leavesRes.json()) as {
             policies?: AnnualLeavePolicyItem[];
             holidays?: OfficeHoliday[];
+            leaveDayOverrides?: EmployeeLeaveDayEntry[];
             requests?: LeaveRequest[];
           };
           if (leavesData.policies) setAnnualLeavePolicies(leavesData.policies);
           if (leavesData.holidays) setOfficeHolidays(leavesData.holidays);
+          if (leavesData.leaveDayOverrides)
+            setEmployeeLeaveDayEntries(leavesData.leaveDayOverrides);
           if (leavesData.requests) setLeaveRequests(leavesData.requests);
         }
         setEmployees([]);
@@ -241,10 +255,12 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         const d = (await leavesRes.json()) as {
           policies?: AnnualLeavePolicyItem[];
           holidays?: OfficeHoliday[];
+          leaveDayOverrides?: EmployeeLeaveDayEntry[];
           requests?: LeaveRequest[];
         };
         if (d.policies) setAnnualLeavePolicies(d.policies);
         if (d.holidays) setOfficeHolidays(d.holidays);
+        if (d.leaveDayOverrides) setEmployeeLeaveDayEntries(d.leaveDayOverrides);
         if (d.requests) setLeaveRequests(d.requests);
       }
       if (claimsRes.ok) {
@@ -613,18 +629,92 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
           )
           .reduce((sum, req) => sum + req.days, 0);
 
-        const available = Math.max(0, policy.yearlyQuota - activeUsed);
+        const personalEntry = employeeLeaveDayEntries.find(
+          (entry) => entry.employeeId === employeeId
+        );
+
+        // Super Admin's personal allocation overrides the company default.
+        const total = personalEntry?.totalDays ?? policy.yearlyQuota;
+        const used = activeUsed + (personalEntry?.usedDaysAdjustment ?? 0);
+        const available = Math.max(0, total - used);
         return {
           type: policy.type,
-          total: policy.yearlyQuota,
-          used: activeUsed,
+          total,
+          used,
           available,
           color: policy.color,
         };
       });
     },
-    [annualLeavePolicies, leaveRequests]
+    [annualLeavePolicies, leaveRequests, employeeLeaveDayEntries]
   );
+
+  const updateEmployeeLeaveDays = async (data: {
+    employeeId: string;
+    totalDays: number | null;
+    usedDaysAdjustment?: number;
+    note?: string;
+    resetToDefault?: boolean;
+  }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch("/api/leaves/employee-days", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        override?: EmployeeLeaveDayEntry;
+        error?: string;
+      };
+
+      if (!res.ok) {
+        return { success: false, error: body.error || "Failed to update leave days." };
+      }
+
+      if (data.resetToDefault === true) {
+        setEmployeeLeaveDayEntries((prev) =>
+          prev.filter((entry) => entry.employeeId !== data.employeeId)
+        );
+      } else if (body.override) {
+        setEmployeeLeaveDayEntries((prev) => {
+          const exists = prev.some(
+            (entry) => entry.id === body.override!.id
+          );
+          return exists
+            ? prev.map((entry) =>
+                entry.id === body.override!.id ? body.override! : entry
+              )
+            : [body.override!, ...prev];
+        });
+      }
+
+      void refreshHRMSData();
+
+      const employeeName =
+        body.override?.employeeName ||
+        employees.find((emp) => emp.id === data.employeeId)?.name ||
+        data.employeeId;
+
+      showToast(
+        data.resetToDefault
+          ? "Leave Days Reset"
+          : "Leave Days Updated",
+        data.resetToDefault
+          ? `${employeeName} now follows the company-wide default Annual Leave quota.`
+          : `${employeeName}'s personal Annual Leave allocation is now ${body.override?.totalDays} day(s)/year.`,
+        "success"
+      );
+
+      return { success: true };
+    } catch {
+      showToast(
+        "Network Error",
+        "Could not update this employee's leave days.",
+        "error"
+      );
+      return { success: false, error: "Network error while updating leave days." };
+    }
+  };
 
   const updateAnnualLeavePolicies = async (
     policies: AnnualLeavePolicyItem[]
@@ -901,8 +991,10 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         exportReport,
         annualLeavePolicies,
         officeHolidays,
+        employeeLeaveDayEntries,
         getEmployeeLeaveBalances,
         updateAnnualLeavePolicies,
+        updateEmployeeLeaveDays,
         addOfficeHoliday,
         deleteOfficeHoliday,
         addAdminLeaveRecord,

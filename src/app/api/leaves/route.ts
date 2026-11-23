@@ -4,6 +4,7 @@ import { ensureDatabaseBootstrapped } from "@/lib/bootstrap";
 import { getSessionUser, isAdminRole } from "@/lib/auth-server";
 import { LeavePolicyModel } from "@/models/LeavePolicy";
 import { LeaveRequestModel } from "@/models/LeaveRequest";
+import { EmployeeLeaveDayModel } from "@/models/EmployeeLeaveDay";
 import { HolidayModel } from "@/models/Holiday";
 import { UserModel } from "@/models/User";
 import { ActivityLogModel } from "@/models/ActivityLog";
@@ -35,6 +36,26 @@ export async function GET() {
       color: policyDoc?.color || "#EA580C",
     };
 
+    const serializeOverride = (o: {
+      _id: { toString(): string };
+      employeeId: string;
+      employeeName: string;
+      totalDays: number;
+      usedDaysAdjustment: number;
+      note?: string;
+      updatedBy?: string;
+      updatedAt: Date;
+    }) => ({
+      id: o._id.toString(),
+      employeeId: o.employeeId,
+      employeeName: o.employeeName,
+      totalDays: o.totalDays,
+      usedDaysAdjustment: o.usedDaysAdjustment,
+      note: o.note || "",
+      updatedBy: o.updatedBy || "",
+      updatedAt: o.updatedAt.toISOString(),
+    });
+
     const mappedHolidays = holidays.map((h) => ({
       id: h._id.toString(),
       name: h.name,
@@ -44,13 +65,15 @@ export async function GET() {
     }));
 
     if (isAdminRole(session.role)) {
-      const requests = await LeaveRequestModel.find()
-        .sort({ createdAt: -1 })
-        .lean();
+      const [requests, leaveDayOverrides] = await Promise.all([
+        LeaveRequestModel.find().sort({ createdAt: -1 }).lean(),
+        EmployeeLeaveDayModel.find().sort({ updatedAt: -1 }).lean(),
+      ]);
 
       return NextResponse.json({
         policies: [policy],
         holidays: mappedHolidays,
+        leaveDayOverrides: leaveDayOverrides.map(serializeOverride),
         requests: requests.map((r) => ({
           id: r.requestCode,
           employeeId: r.employeeId,
@@ -69,15 +92,19 @@ export async function GET() {
       });
     }
 
-    const myRequests = await LeaveRequestModel.find({
-      employeeId: session.employeeId,
-    })
-      .sort({ createdAt: -1 })
-      .lean();
+    const [myRequests, myOverrideDocs] = await Promise.all([
+      LeaveRequestModel.find({
+        employeeId: session.employeeId,
+      })
+        .sort({ createdAt: -1 })
+        .lean(),
+      EmployeeLeaveDayModel.find({ employeeId: session.employeeId }).lean(),
+    ]);
 
     return NextResponse.json({
       policies: [policy],
       holidays: mappedHolidays,
+      leaveDayOverrides: myOverrideDocs.map(serializeOverride),
       requests: myRequests.map((r) => ({
         id: r.requestCode,
         employeeId: r.employeeId,
@@ -155,22 +182,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const [policyDoc, activeLeaves] = await Promise.all([
+    const [policyDoc, activeLeaves, personalDays] = await Promise.all([
       LeavePolicyModel.findOne({ key: "annual_leave" }).lean(),
       LeaveRequestModel.find({
         employeeId: targetEmpId,
         status: { $in: ["Pending", "Approved"] },
       }).lean(),
+      EmployeeLeaveDayModel.findOne({ employeeId: targetEmpId }).lean(),
     ]);
 
-    const yearlyQuota = policyDoc?.yearlyQuota ?? 20;
-    const usedDays = activeLeaves.reduce((acc, item) => acc + item.days, 0);
-    const remainingDays = Math.max(0, yearlyQuota - usedDays);
+    // Personal allocation overrides the company-wide default when present.
+    const effectiveQuota = personalDays?.totalDays ?? policyDoc?.yearlyQuota ?? 20;
+    const usedDays =
+      activeLeaves.reduce((acc, item) => acc + item.days, 0) +
+      (personalDays?.usedDaysAdjustment ?? 0);
+    const remainingDays = Math.max(0, effectiveQuota - usedDays);
 
     if (days > remainingDays) {
       return NextResponse.json(
         {
-          error: `Insufficient Annual Leave balance. Remaining: ${remainingDays} of ${yearlyQuota} days.`,
+          error: `Insufficient Annual Leave balance. Remaining: ${remainingDays} of ${effectiveQuota} days.`,
         },
         { status: 400 }
       );
