@@ -279,7 +279,7 @@ function ResetPasswordContent() {
             </div>
 
             <a
-              href="/downloads/Bayshore-HR.apk?v=1.0.5"
+              href="/downloads/Bayshore-HR.apk?v=1.0.6"
               download="Bayshore-HR.apk"
               className="flex items-center justify-between gap-3 rounded-xl border border-orange-200 bg-orange-50/80 px-3.5 py-2.5 text-orange-800 hover:bg-orange-100/80 transition-colors"
             >
@@ -290,7 +290,7 @@ function ResetPasswordContent() {
                     Download Bayshore HR Android App
                   </span>
                   <span className="block text-[10px] text-orange-700 font-medium">
-                    Bayshore-HR.apk • Updated Release (HR &amp; Attendance)
+                    Bayshore-HR.apk • v1.0.6 (Fast Launch &amp; Attendance)
                   </span>
                 </span>
               </span>
